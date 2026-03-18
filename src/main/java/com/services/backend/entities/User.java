@@ -55,13 +55,21 @@ public class User implements UserDetails {
     // Aqui definimos o que cada nível pode fazer
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if(this.role == UserRole.ADMIN) {
-            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_PROFESSIONAL"), new SimpleGrantedAuthority("ROLE_USER"));
-        } else if(this.role == UserRole.PROFESSIONAL) {
-            return List.of(new SimpleGrantedAuthority("ROLE_PROFESSIONAL"), new SimpleGrantedAuthority("ROLE_USER"));
-        } else {
-            return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-        }
+        return switch (this.role) {
+            case ADMIN -> List.of(
+                    new SimpleGrantedAuthority("ROLE_ADMIN"), 
+                    new SimpleGrantedAuthority("ROLE_PROFESSIONAL"), 
+                    new SimpleGrantedAuthority("ROLE_USER")
+            );
+            case PROFESSIONAL -> List.of(
+                    new SimpleGrantedAuthority("ROLE_PROFESSIONAL"), 
+                    new SimpleGrantedAuthority("ROLE_USER")
+            );
+            case USER -> List.of(
+                    new SimpleGrantedAuthority("ROLE_USER")
+            );
+            default -> throw new IllegalStateException("Unexpected value: " + this.role);
+        };
     }
 
     @Override
