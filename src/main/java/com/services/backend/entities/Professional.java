@@ -22,6 +22,9 @@ public class Professional {
     @Column(nullable = false, length = 150)
     private String name;
 
+    @Column(name = "user_email")
+    private String userEmail;
+
     @Column(nullable = false, length = 20)
     private String phone;
 
@@ -152,6 +155,14 @@ public class Professional {
 
     public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+    this.userEmail = userEmail;
     }
     
 }

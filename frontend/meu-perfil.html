@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil Profissional</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; background-color: #007bff; color: white; border: none; padding: 12px; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        #mensagem { text-align: center; margin-top: 15px; font-weight: bold; }
+        
+        /* Navbar */
+        .navbar { background-color: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .nav-links a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; padding: 8px 12px; border-radius: 4px; transition: 0.3s; }
+        .nav-links a:hover { background-color: #555; }
+        .nav-user { display: flex; align-items: center; gap: 15px; }
+        .btn-sair { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: auto; margin: 0;}
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-links">
+        <a href="index.html">🔍 Buscar Profissionais</a>
+        <a href="meu-perfil.html" style="background-color: #555;">⚙️ Meu Perfil</a>
+    </div>
+    <div class="nav-user">
+        <button onclick="sair()" class="btn-sair">Sair</button>
+    </div>
+</nav>
+
+<div class="container">
+    <h1>Editar Meu Perfil</h1>
+    
+    <!-- Campo oculto para guardar o ID do profissional -->
+    <input type="hidden" id="profId">
+
+    <div class="form-group">
+        <label>Telefone (WhatsApp):</label>
+        <input type="text" id="phone" placeholder="(XX) XXXXX-XXXX">
+    </div>
+    <div class="form-group">
+        <label>Rua:</label>
+        <input type="text" id="street">
+    </div>
+    <div class="form-group">
+        <label>Número:</label>
+        <input type="text" id="addressNumber">
+    </div>
+    <div class="form-group">
+        <label>Complemento:</label>
+        <input type="text" id="complement">
+    </div>
+    <div class="form-group">
+        <label>Cidade:</label>
+        <input type="text" id="city">
+    </div>
+    <div class="form-group">
+        <label>Estado:</label>
+        <input type="text" id="state" placeholder="SP, RJ, MG...">
+    </div>
+
+    <button onclick="atualizarPerfil()">💾 Salvar Alterações</button>
+    <div id="mensagem"></div>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+
+    // 1. Carrega os dados assim que a tela abre
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('mensagem').innerHTML = '<span style="color: blue;">Carregando seus dados...</span>';
+
+        fetch('http://localhost:8080/professionals/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            if (response.status === 404) {
+                throw new Error("Você ainda não criou um perfil de profissional. Vá para a tela de cadastro!");
+            }
+            if (!response.ok) throw new Error("Erro ao carregar perfil.");
+            return response.json();
+        })
+        .then(data => {
+            // Preenche os campos com os dados do banco
+            document.getElementById('profId').value = data.id;
+            document.getElementById('phone').value = data.phone || '';
+            document.getElementById('street').value = data.street || '';
+            document.getElementById('addressNumber').value = data.addressNumber || '';
+            document.getElementById('complement').value = data.complement || '';
+            document.getElementById('city').value = data.city || '';
+            document.getElementById('state').value = data.state || '';
+            document.getElementById('mensagem').innerHTML = ''; // Limpa a mensagem
+        })
+        .catch(error => {
+            document.getElementById('mensagem').innerHTML = `<span style="color: red;">${error.message}</span>`;
+        });
+    });
+
+    // 2. Envia os dados atualizados para o Java
+    function atualizarPerfil() {
+        const id = document.getElementById('profId').value;
+        const msgDiv = document.getElementById('mensagem');
+
+        if (!id) {
+            msgDiv.innerHTML = '<span style="color: red;">Erro: ID do perfil não encontrado.</span>';
+            return;
+        }
+
+        const dadosAtualizados = {
+            phone: document.getElementById('phone').value,
+            street: document.getElementById('street').value,
+            addressNumber: document.getElementById('addressNumber').value,
+            complement: document.getElementById('complement').value,
+            city: document.getElementById('city').value,
+            state: document.getElementById('state').value
+        };
+
+        msgDiv.innerHTML = '<span style="color: blue;">Salvando...</span>';
+
+        fetch(`http://localhost:8080/professionals/${id}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(dadosAtualizados)
+        })
+        .then(response => {
+            if (response.ok) {
+                msgDiv.innerHTML = '<span style="color: green;">✅ Perfil atualizado com sucesso!</span>';
+            } else {
+                return response.text().then(text => { throw new Error(text) });
+            }
+        })
+        .catch(error => {
+            msgDiv.innerHTML = `<span style="color: red;">Erro: ${error.message}</span>`;
+        });
+    }
+
+    function sair() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        window.location.href = 'login.html';
+    }
+</script>
+
+</body>
+</html>
