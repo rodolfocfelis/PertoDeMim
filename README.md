@@ -3,14 +3,6 @@
 </h1>
 
 <p align="center">
-  <a href="#-sobre-o-projeto">Sobre</a> •
-  <a href="#-tecnologias">Tecnologias</a> •
-  <a href="#-arquitetura">Arquitetura</a> •
-  <a href="#-como-executar">Como Executar</a> •
-  <a href="#-autor">Autor</a>
-</p>
-
-<p align="center">
   <img src="https://img.shields.io/badge/Status-Em%20Desenvolvimento-green?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/Licen%C3%A7a-MIT-blue?style=for-the-badge" alt="License">
 </p>
