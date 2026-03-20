@@ -1,9 +1,11 @@
 package com.services.backend.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,7 +33,7 @@ public class AuthController {
     private TokenService tokenService;
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody AuthenticationDTO data) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody AuthenticationDTO data) {
         // Pega o e-mail e senha digitados e tenta autenticar
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
@@ -45,16 +47,24 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody RegisterDTO data) {
-        // Verifica se o e-mail já existe no banco
+    public ResponseEntity<String> register(@RequestBody RegisterDTO data) {
         if (this.repository.findByEmail(data.email()) != null) {
             return ResponseEntity.badRequest().body("E-mail já cadastrado!");
         }
 
-        // Criptografa a senha ANTES de salvar no banco (NUNCA salvamos senhas em texto puro)
-        String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
+        if (data.role() == com.services.backend.entities.enums.UserRole.ADMIN) {
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            
+            // Se não tiver ninguém logado, ou se quem estiver logado NÃO for ADMIN, bloqueia!
+            if (auth == null || auth.getPrincipal().equals("anonymousUser") || 
+                !auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Acesso negado: Apenas um Administrador pode cadastrar outro Administrador.");
+            }
+        }
         
-        // Cria o novo usuário e salva
+        String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
         User newUser = new User(null, data.name(), data.email(), encryptedPassword, data.role());
         this.repository.save(newUser);
 

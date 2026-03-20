@@ -58,9 +58,17 @@ public class ProfessionalController {
     public ResponseEntity<List<Professional>> findNearby(
             @RequestParam Double lat,
             @RequestParam Double lon,
-            @RequestParam(defaultValue = "10.0") Double radius) { // Se não passar raio, o padrão é 10km
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "10.0") Double radius) {
+                
+        List<Professional> professionals = service.findNearby(lat, lon, radius);
         
-        List<Professional> list = service.findNearby(lat, lon, radius);
-        return ResponseEntity.ok().body(list);
+        if (categoryId != null) {
+            professionals = professionals.stream()
+                    .filter(p -> p.getCategory().getId().equals(categoryId))
+                    .toList();
+        }
+
+        return ResponseEntity.ok().body(professionals);
     }
 }
