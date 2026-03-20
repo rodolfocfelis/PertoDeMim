@@ -7,7 +7,6 @@
   <a href="#-tecnologias">Tecnologias</a> •
   <a href="#-arquitetura">Arquitetura</a> •
   <a href="#-como-executar">Como Executar</a> •
-  <a href="#-roadmap">Roadmap</a> •
   <a href="#-autor">Autor</a>
 </p>
 
@@ -69,17 +68,45 @@ Abra a pasta do projeto na sua IDE e execute a classe principal `BackendApplicat
 ### 4. Rodando o Frontend
 Abra o arquivo `registro.html` no seu navegador de preferência para criar o usuário `ADMIN` inicial e navegue pelo sistema.
 
-## 🛣️ Roadmap
+## 🤝 Como Contribuir
 
-- [x] Cadastro e Busca de Profissionais
-- [x] Integração com ViaCEP e Nominatim
-- [x] Cálculo de distância (Haversine)
-- [x] Autenticação JWT e Perfis de Acesso
-- [ ] Implementação de Mapa visual (Leaflet.js) para exibição de pins
-- [ ] Edição de perfil para o profissional
-- [ ] Deploy na nuvem (Ex: Render)
+Ficou interessado em ajudar a evoluir o **PertoDeMim**? Toda contribuição (seja código, correção de bugs ou melhoria na documentação) é muito bem-vinda! Siga o passo a passo abaixo:
 
----
+**1. Faça um Fork do projeto**
+No canto superior direito desta página no GitHub, clique no botão **Fork**. Isso criará uma cópia exata deste repositório dentro da sua própria conta do GitHub, onde você terá total liberdade para mexer.
+
+**2. Clone o seu Fork para a sua máquina**
+No seu terminal, baixe a cópia que você acabou de criar (lembre-se de substituir `SEU_USUARIO` pelo seu nome de usuário no GitHub):
+```bash
+git clone [https://github.com/SEU_USUARIO/pertodemim-api.git](https://github.com/SEU_USUARIO/pertodemim-api.git)
+```
+
+**3. Crie uma Branch para a sua alteração**
+Para manter tudo organizado, nunca trabalhe diretamente na branch `main`. Crie uma nova ramificação (branch) com um nome que indique o que você vai fazer:
+```bash
+cd pertodemim-api
+git checkout -b feature/nome-da-sua-funcionalidade
+```
+*(Dica: use prefixos como `feature/` para novas funções, `fix/` para correções de erros ou `docs/` para documentação).*
+
+**4. Faça as alterações e o Commit**
+Escreva seu código! Quando terminar, adicione os arquivos modificados e crie um "ponto de salvamento" (commit) com uma mensagem clara do que foi feito:
+```bash
+git add .
+git commit -m "feat: adiciona botão de voltar na tela de perfil"
+```
+
+**5. Envie (Push) as alterações para o seu GitHub**
+Agora, mande o código da sua máquina de volta para o seu repositório (Fork) no GitHub:
+```bash
+git push origin feature/nome-da-sua-funcionalidade
+```
+
+**6. Abra um Pull Request (PR)**
+Volte para a página deste repositório original no GitHub. Você verá um aviso amarelo com um botão verde escrito **Compare & pull request**. Clique nele, escreva um breve resumo do que você desenvolveu e envie. 
+
+Assim que enviado, revisaremos o seu código para integrá-lo ao projeto oficial! 🎉
+
 
 ## 👨‍💻 Autor
 
