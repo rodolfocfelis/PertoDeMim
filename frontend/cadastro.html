@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Profissional</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 0; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background-color: #218838; }
+        #mensagem { margin-top: 15px; font-weight: bold; text-align: center; }
+        .cep-loading { font-size: 12px; color: #007bff; display: none; }
+        /* Estilos da Barra de Navegação */
+        .navbar { background-color: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .nav-links a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; padding: 8px 12px; border-radius: 4px; transition: 0.3s; }
+        .nav-links a:hover { background-color: #555; }
+        .nav-user { display: flex; align-items: center; gap: 15px; }
+        .btn-sair { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: auto; margin: 0; }
+        .btn-sair:hover { background-color: #c82333; }
+        #user-role-badge { background-color: #ffc107; color: #000; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-links">
+        <a href="index.html" id="nav-busca">🔍 Buscar Profissionais</a>
+        <a href="cadastro.html" id="nav-cadastro">📝 Área do Profissional</a>
+        <a href="usuarios.html" id="nav-usuarios" style="display: none;">👥 Gerenciar Usuários</a>
+    </div>
+    <div class="nav-user">
+        <span id="user-role-badge">Perfil</span>
+        <button onclick="sair()" class="btn-sair">Sair</button>
+    </div>
+</nav>
+
+<div class="container">
+    <h1>Cadastrar Serviço</h1>
+    
+    <div class="form-group">
+        <label for="nome">Nome do Profissional/Empresa:</label>
+        <input type="text" id="nome" placeholder="Ex: Oficina do João" required>
+    </div>
+
+    <div class="form-group">
+        <label for="telefone">Telefone (WhatsApp):</label>
+        <input type="text" id="telefone" placeholder="Ex: 19999999999" required>
+    </div>
+
+   <div class="form-group">
+        <label for="categoria">Categoria do Serviço:</label>
+        <div style="display: flex; gap: 10px;">
+            <select id="categoria" required style="flex: 1;">
+                <option value="">Carregando categorias...</option>
+            </select>
+            <button type="button" onclick="criarNovaCategoria()" style="width: auto; margin-top: 0; background-color: #17a2b8;">+ Nova</button>
+        </div>
+    </div>
+
+    <h3>Endereço de Atendimento</h3>
+    
+    <div class="form-row">
+        <div class="form-group" style="flex: 0.5;">
+            <label for="cep">CEP: <span id="cep-status" class="cep-loading">Buscando...</span></label>
+            <input type="text" id="cep" placeholder="13170-000" maxlength="9" onblur="buscarCep()" required>
+        </div>
+        <div class="form-group">
+            <label for="rua">Rua/Logradouro:</label>
+            <input type="text" id="rua" required>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group" style="flex: 0.3;">
+            <label for="numero">Número:</label>
+            <input type="text" id="numero" required>
+        </div>
+        <div class="form-group" style="flex: 0.7;">
+            <label for="complemento">Complemento (Opcional):</label>
+            <input type="text" id="complemento" placeholder="Apto 12, Bloco B">
+        </div>
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="cidade">Cidade:</label>
+            <input type="text" id="cidade" required>
+        </div>
+        <div class="form-group" style="flex: 0.3;">
+            <label for="estado">Estado (UF):</label>
+            <input type="text" id="estado" maxlength="2" required>
+        </div>
+    </div>
+
+    <button onclick="cadastrarProfissional()">Salvar Cadastro</button>
+
+    <div id="mensagem"></div>
+</div>
+
+<script>
+    // --- LÓGICA DE NAVEGAÇÃO E SEGURANÇA ---
+    const token = localStorage.getItem('token');
+    const userRole = (localStorage.getItem('role') || '').toUpperCase();
+
+    // 1. Expulsa se não tiver token
+     if (!token) {
+        alert('Você precisa fazer login para acessar esta página.');
+        window.location.href = 'login.html';
+    } else if (userRole === 'ROLE_USER') {
+        // Se for um usuário comum, não pode cadastrar profissionais
+        alert('Acesso negado. Apenas profissionais ou administradores podem acessar esta página.');
+        window.location.href = 'index.html';
+    }
+
+    // 2. Configura o Menu Visual
+    window.addEventListener('DOMContentLoaded', () => {
+        // Mostra qual é o perfil da pessoa logada
+        let nomePerfil = 'Usuário';
+        if (userRole.includes('ADMIN')) nomePerfil = 'Administrador';
+        if (userRole.includes('PROFESSIONAL')) nomePerfil = 'Profissional';
+        document.getElementById('user-role-badge').innerText = nomePerfil;
+
+        // Se for um Usuário Comum, esconde o botão de ir para o Cadastro
+        if (userRole.includes('USER')) {
+            const navCadastro = document.getElementById('nav-cadastro');
+            if(navCadastro) navCadastro.style.display = 'none';
+        }
+    });
+
+    // 3. Trava de segurança extra para a página de CADASTRO
+    // (Se o arquivo for o cadastro.html e a pessoa for USER, ele chuta ela de volta pra busca)
+    if (window.location.pathname.includes('cadastro.html') && userRole.includes('USER')) {
+        alert('Acesso negado. Apenas profissionais ou administradores podem acessar esta página.');
+        window.location.href = 'index.html';
+    }
+
+    // 4. Função do botão Sair
+    function sair() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        window.location.href = 'login.html';
+    }
+
+    // Se for ADMIN, mostra o botão de gerenciar usuários
+        if (userRole.includes('ADMIN')) {
+            const navUsuarios = document.getElementById('nav-usuarios');
+            if(navUsuarios) navUsuarios.style.display = 'inline-block';
+        }
+    // ----------------------------------------
+
+    // Carrega as categorias (Esta rota deixamos pública no Spring, então não precisa de token obrigatoriamente, mas é boa prática enviar)
+    window.onload = function() {
+        fetch('http://localhost:8080/categories')
+            .then(response => response.json())
+            .then(categorias => {
+                const select = document.getElementById('categoria');
+                select.innerHTML = '<option value="">Selecione uma categoria...</option>';
+                categorias.forEach(cat => {
+                    select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            })
+            .catch(error => console.error('Erro ao carregar categorias:', error));
+    };
+
+    function buscarCep() {
+        const cep = document.getElementById('cep').value.replace(/\D/g, '');
+        const statusMsg = document.getElementById('cep-status');
+
+        if (cep.length === 8) {
+            statusMsg.style.display = 'inline';
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    statusMsg.style.display = 'none';
+                    if (!data.erro) {
+                        document.getElementById('rua').value = data.logradouro;
+                        document.getElementById('cidade').value = data.localidade;
+                        document.getElementById('estado').value = data.uf;
+                        document.getElementById('numero').focus(); 
+                    } else {
+                        alert("CEP não encontrado!");
+                    }
+                })
+                .catch(error => {
+                    statusMsg.style.display = 'none';
+                    console.error('Erro na busca do CEP:', error);
+                });
+        }
+    }
+
+    function criarNovaCategoria() {
+        const nomeCategoria = prompt("Digite o nome da nova profissão (Ex: Pedreiro):");
+        
+        if (nomeCategoria && nomeCategoria.trim() !== "") {
+            const descricaoCategoria = prompt(`Digite uma breve descrição para ${nomeCategoria} (Opcional):`);
+
+            fetch('http://localhost:8080/categories', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // <--- Token para autorizar criação
+                },
+                body: JSON.stringify({ 
+                    name: nomeCategoria, 
+                    description: descricaoCategoria || "Sem descrição" 
+                })
+            })
+            .then(response => response.json())
+            .then(novaCat => {
+                const select = document.getElementById('categoria');
+                let opcaoExiste = Array.from(select.options).find(opt => opt.value == novaCat.id);
+                
+                if (!opcaoExiste) {
+                    select.innerHTML += `<option value="${novaCat.id}">${novaCat.name}</option>`;
+                } else {
+                    alert("Esta categoria já existia no sistema e foi selecionada automaticamente!");
+                }
+                select.value = novaCat.id;
+            })
+            .catch(error => {
+                alert("Erro ao salvar a nova categoria.");
+                console.error(error);
+            });
+        }
+    }
+
+    function cadastrarProfissional() {
+        const msgDiv = document.getElementById('mensagem');
+        msgDiv.innerHTML = '<span style="color: blue;">Processando endereço no mapa...</span>';
+
+        const nome = document.getElementById('nome').value;
+        const telefone = document.getElementById('telefone').value;
+        const categoriaId = document.getElementById('categoria').value;
+        const rua = document.getElementById('rua').value;
+        const numero = document.getElementById('numero').value;
+        const cidade = document.getElementById('cidade').value;
+        const estado = document.getElementById('estado').value;
+        
+        if(!nome || !telefone || !categoriaId || !rua || !numero || !cidade || !estado) {
+            msgDiv.innerHTML = '<span style="color: red;">Preencha todos os campos obrigatórios!</span>';
+            return;
+        }
+
+        const enderecoCompleto = `${rua}, ${numero}, ${cidade}, ${estado}, Brasil`;
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(enderecoCompleto)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    msgDiv.innerHTML = '<span style="color: red;">Não foi possível localizar este endereço no mapa.</span>';
+                    return;
+                }
+
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+
+                msgDiv.innerHTML = '<span style="color: blue;">Endereço validado! Salvando no sistema...</span>';
+
+                const novoProfissional = {
+                    name: nome,
+                    phone: telefone,
+                    city: cidade,
+                    state: estado,
+                    zipCode: document.getElementById('cep').value.replace(/\D/g, ''), 
+                    street: rua,
+                    addressNumber: numero,
+                    complement: document.getElementById('complemento').value,
+                    latitude: lat,
+                    longitude: lon,
+                    category: { id: parseInt(categoriaId) }
+                };
+
+                fetch('http://localhost:8080/professionals', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` // <--- Token para autorizar o cadastro
+                    },
+                    body: JSON.stringify(novoProfissional)
+                })
+                .then(response => {
+                    if(response.ok) {
+                        msgDiv.innerHTML = '<span style="color: green;">Profissional cadastrado com sucesso!</span>';
+                        document.querySelectorAll('input').forEach(input => input.value = '');
+                        document.getElementById('categoria').value = '';
+                    } else if (response.status === 403) {
+                         msgDiv.innerHTML = '<span style="color: red;">Acesso negado. Seu perfil não permite esta ação.</span>';
+                    } else {
+                        msgDiv.innerHTML = '<span style="color: red;">Erro ao salvar no banco de dados.</span>';
+                    }
+                })
+                .catch(error => {
+                    msgDiv.innerHTML = '<span style="color: red;">Erro ao conectar com a API Java.</span>';
+                });
+            })
+            .catch(error => {
+                msgDiv.innerHTML = '<span style="color: red;">Erro no serviço de mapas.</span>';
+            });
+    }
+</script>
+
+</body>
+</html>

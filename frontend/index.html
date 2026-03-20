@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca de Profissionais</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 0; margin: 0;}
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        #resultados { margin-top: 20px; }
+        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card h3 { margin: 0 0 10px 0; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .endereco { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 15px; }
+        .whatsapp-btn { display: inline-block; background-color: #25d366; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; text-align: center; }
+        .whatsapp-btn:hover { background-color: #128c7e; }
+        /* Estilos da Barra de Navegação */
+        .navbar { background-color: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .nav-links a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; padding: 8px 12px; border-radius: 4px; transition: 0.3s; }
+        .nav-links a:hover { background-color: #555; }
+        .nav-user { display: flex; align-items: center; gap: 15px; }
+        .btn-sair { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: auto; margin: 0; }
+        .btn-sair:hover { background-color: #c82333; }
+        #user-role-badge { background-color: #ffc107; color: #000; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-links">
+        <a href="index.html" id="nav-busca">🔍 Buscar Profissionais</a>
+        <a href="cadastro.html" id="nav-cadastro">📝 Área do Profissional</a>
+        <a href="usuarios.html" id="nav-usuarios" style="display: none;">👥 Gerenciar Usuários</a>
+    </div>
+    <div class="nav-user">
+        <span id="user-role-badge">Perfil</span>
+        <button onclick="sair()" class="btn-sair">Sair</button>
+    </div>
+</nav>
+
+<div class="container">
+    <h1>Encontrar Profissionais</h1>
+
+    <!-- NOVO: Filtro de Categoria -->
+    <div style="margin-bottom: 15px;">
+        <label for="categoriaBusca" style="font-weight: bold; display: block; margin-bottom: 5px;">O que você precisa?</label>
+        <select id="categoriaBusca" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <option value="">Todas as profissões</option>
+            <!-- O JavaScript vai preencher isso aqui -->
+        </select>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Raio de busca (em KM):</label>
+        <input type="number" id="raio" value="15" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+    </div>
+
+    <button onclick="buscarProfissionais()">Localizar e Buscar</button>
+
+    <div id="resultados">
+        </div>
+</div>
+
+<script>
+   // --- LÓGICA DE NAVEGAÇÃO E SEGURANÇA ---
+    const token = localStorage.getItem('token');
+    const userRole = (localStorage.getItem('role') || '').toUpperCase();
+
+    // 1. Expulsa se não tiver token
+    if (!token) {
+        alert('Você precisa fazer login para acessar esta página.');
+        window.location.href = 'login.html';
+    }
+
+    // 2. Configura o Menu Visual
+    window.addEventListener('DOMContentLoaded', () => {
+        // Mostra qual é o perfil da pessoa logada
+        let nomePerfil = 'Usuário';
+        if (userRole.includes('ADMIN')) nomePerfil = 'Administrador';
+        if (userRole.includes('PROFESSIONAL')) nomePerfil = 'Profissional';
+        document.getElementById('user-role-badge').innerText = nomePerfil;
+
+        // Se for um Usuário Comum, esconde o botão de ir para o Cadastro
+        if (userRole.includes('USER')) {
+            const navCadastro = document.getElementById('nav-cadastro');
+            if(navCadastro) navCadastro.style.display = 'none';
+        }
+
+        fetch('http://localhost:8080/categories')
+            .then(response => response.json())
+            .then(categorias => {
+                const select = document.getElementById('categoriaBusca');
+                categorias.forEach(cat => {
+                    select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            })
+            .catch(erro => console.error('Erro ao carregar categorias:', erro));
+    });
+
+    // 3. Trava de segurança extra para a página de CADASTRO
+    // (Se o arquivo for o cadastro.html e a pessoa for USER, ele chuta ela de volta pra busca)
+    if (window.location.pathname.includes('cadastro.html') && userRole.includes('USER')) {
+        alert('Acesso negado. Apenas profissionais ou administradores podem acessar esta página.');
+        window.location.href = 'index.html';
+    }
+
+    // 4. Função do botão Sair
+    function sair() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        window.location.href = 'login.html';
+    }
+
+    // Se for ADMIN, mostra o botão de gerenciar usuários
+        if (userRole.includes('ADMIN')) {
+            const navUsuarios = document.getElementById('nav-usuarios');
+            if(navUsuarios) navUsuarios.style.display = 'inline-block';
+        }
+    // ----------------------------------------
+
+    // Calcula a distância em KM entre dois pontos
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return (R * c).toFixed(1); 
+    }
+
+    function buscarProfissionais() {
+        const resultadosDiv = document.getElementById('resultados');
+        const raio = document.getElementById('raio').value;
+
+        resultadosDiv.innerHTML = '<p style="text-align: center;">Buscando sua localização...</p>';
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const categoriaId = document.getElementById('categoriaBusca').value;
+                    let urlBusca = `http://localhost:8080/professionals/search?lat=${lat}&lon=${lon}&radius=${raio}`;
+                    
+                    resultadosDiv.innerHTML = '<p style="text-align: center; color: #007bff;">Localização encontrada! Buscando no banco de dados...</p>';
+                    
+                    if (categoriaId !== "") {
+                        urlBusca += `&categoryId=${categoriaId}`;
+                    }
+                    // 2. Enviando o Token no Cabeçalho (Headers)
+                    fetch(urlBusca, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                        .then(response => {
+                            if (response.status === 403) throw new Error('Acesso negado. Token inválido ou expirado.');
+                            return response.json();
+                        })
+                        .then(data => {
+                            resultadosDiv.innerHTML = ''; 
+                            
+                            if (data.length === 0) {
+                                resultadosDiv.innerHTML = '<p style="text-align: center; color: #666;">Nenhum profissional encontrado para este filtro.</p>';
+                                return;
+                            }
+
+                            // NOVO: Calcula a distância e anexa ao objeto antes de exibir
+                            data.forEach(prof => {
+                                prof.distanciaCalculada = parseFloat(calcularDistancia(lat, lon, prof.latitude, prof.longitude));
+                            });
+
+                            // NOVO: Ordena a lista do mais perto para o mais longe
+                            data.sort((a, b) => a.distanciaCalculada - b.distanciaCalculada);
+
+                            // Agora exibe os cards já ordenados
+                            data.forEach(prof => {
+                                const card = document.createElement('div');
+                                card.className = 'card';
+                                card.style.backgroundColor = '#fff';
+                                card.style.padding = '15px';
+                                card.style.marginBottom = '15px';
+                                card.style.borderRadius = '8px';
+                                card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                                
+                                const complemento = prof.complement ? ` - ${prof.complement}` : '';
+                                const enderecoCompleto = `${prof.street}, ${prof.addressNumber}${complemento} <br> ${prof.city} - ${prof.state}`;
+                                const numeroLimpo = prof.phone ? prof.phone.replace(/\D/g, '') : '';
+
+                                card.innerHTML = `
+                                    <h3 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0; color: #007bff;">
+                                        ${prof.name} 
+                                        <span style="font-size: 14px; background: #e9ecef; color: #333; padding: 4px 8px; border-radius: 12px;">📍 ${prof.distanciaCalculada.toFixed(1)} km</span>
+                                    </h3>
+                                    <p style="margin: 5px 0; font-weight: bold; color: #555;">🛠️ ${prof.category.name}</p>
+                                    <div style="font-size: 14px; color: #666; margin-bottom: 15px;">
+                                        <strong>Endereço:</strong><br> ${enderecoCompleto}
+                                    </div>
+                                    <a href="https://wa.me/55${numeroLimpo}" target="_blank" style="display: inline-block; background-color: #25D366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                                        💬 Chamar no WhatsApp
+                                    </a>
+                                `;
+                                resultadosDiv.appendChild(card);
+                            });
+                        })
+                        .catch(error => {
+                            resultadosDiv.innerHTML = `<p style="color: red; text-align: center;">${error.message}</p>`;
+                            console.error('Erro:', error);
+                        });
+                },
+                (error) => {
+                    resultadosDiv.innerHTML = '<p style="color: red; text-align: center;">Não foi possível obter sua localização. Ative o GPS/Permissões do navegador.</p>';
+                }
+            );
+        } else {
+            resultadosDiv.innerHTML = '<p style="color: red; text-align: center;">Seu navegador não suporta geolocalização.</p>';
+        }
+    }
+</script>
+
+</body>
+</html>

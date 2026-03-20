@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Profissionais</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input[type="email"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        #mensagem { margin-top: 15px; font-weight: bold; text-align: center; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Acesso ao Sistema</h2>
+    
+    <div class="form-group">
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" placeholder="Digite seu e-mail" required>
+    </div>
+
+    <div class="form-group">
+        <label for="senha">Senha:</label>
+        <input type="password" id="senha" placeholder="Digite sua senha" required>
+    </div>
+
+    <button onclick="fazerLogin()">Entrar</button>
+
+    <div id="mensagem"></div>
+
+    <a href="registro.html" style="display: block; text-align: center; margin-top: 15px; font-size: 14px; color: #007bff; text-decoration: none;">
+        Não tem uma conta? Cadastre-se aqui.
+    </a>
+</div>
+
+<script>
+    function fazerLogin() {
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+        const msgDiv = document.getElementById('mensagem');
+
+        if(!email || !senha) {
+            msgDiv.innerHTML = '<span style="color: red;">Preencha e-mail e senha!</span>';
+            return;
+        }
+
+        msgDiv.innerHTML = '<span style="color: blue;">Autenticando...</span>';
+
+        // Aqui nós faremos a requisição para a futura rota de segurança do seu Java
+        fetch('http://localhost:8080/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: senha })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Credenciais inválidas');
+            return response.json();
+        })
+        .then(data => {
+            // O Java vai nos devolver um Token de segurança e o Perfil (Role) do usuário
+            localStorage.setItem('token', data.token); // Salva o "crachá" no navegador
+            localStorage.setItem('role', data.role);   // Salva o nível de acesso
+
+            msgDiv.innerHTML = '<span style="color: green;">Login aprovado! Redirecionando...</span>';
+
+            // A Mágica do Redirecionamento por Perfil:
+            setTimeout(() => {
+                if (data.role === 'ROLE_ADMIN') {
+                    // ADM vai para um painel geral (podemos criar depois, por enquanto vai pro index)
+                    window.location.href = 'index.html'; 
+                } else if (data.role === 'ROLE_PROFESSIONAL') {
+                    // Profissional vai direto para a tela de editar/cadastrar seus dados
+                    window.location.href = 'cadastro.html';
+                } else {
+                    // Usuário comum (ROLE_USER) vai para a tela de busca
+                    window.location.href = 'index.html';
+                }
+            }, 1000);
+        })
+        .catch(error => {
+            msgDiv.innerHTML = '<span style="color: red;">E-mail ou senha incorretos!</span>';
+            console.error('Erro no login:', error);
+        });
+    }
+</script>
+
+</body>
+</html>

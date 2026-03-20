@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuário</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input[type="text"], input[type="email"], input[type="password"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        button:hover { background-color: #218838; }
+        #mensagem { margin-top: 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .link-login { display: block; text-align: center; margin-top: 15px; font-size: 14px; color: #007bff; text-decoration: none; }
+        .link-login:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Criar Nova Conta</h2>
+    
+    <div class="form-group">
+        <label for="nome">Nome Completo:</label>
+        <input type="text" id="nome" placeholder="Digite seu nome" required>
+    </div>
+
+    <div class="form-group">
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" placeholder="Digite seu e-mail" required>
+    </div>
+
+    <div class="form-group">
+        <label for="senha">Senha:</label>
+        <input type="password" id="senha" placeholder="Crie uma senha segura" required>
+    </div>
+
+    <div class="form-group">
+        <label for="perfil">Tipo de Perfil:</label>
+        <select id="perfil" required>
+            <option value="PROFESSIONAL">Profissional (Presta serviços)</option>
+            <option value="USER">Usuário Comum (Busca serviços)</option>
+        </select>
+    </div>
+
+    <button onclick="registrarUsuario()">Cadastrar</button>
+
+    <div id="mensagem"></div>
+
+    <a href="login.html" class="link-login">Já tem uma conta? Faça login aqui.</a>
+</div>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const userRole = (localStorage.getItem('role') || '').toUpperCase();
+        const selectPerfil = document.getElementById('perfil');
+
+        // 1. Limpamos o select e colocamos apenas as opções básicas (Padrão para todos)
+        selectPerfil.innerHTML = `
+            <option value="USER">Usuário Comum (Busca serviços)</option>
+            <option value="PROFESSIONAL">Profissional (Presta serviços)</option>
+        `;
+
+        // 2. Se a pessoa logada for realmente um ADMIN, nós INJETAMOS a opção extra
+        if (userRole.includes('ADMIN')) {
+            selectPerfil.innerHTML += `
+                <option value="ADMIN" style="background-color: #ffc107; font-weight: bold;">
+                    ⭐ Administrador (Controle total)
+                </option>
+            `;
+        }
+    });
+
+    function registrarUsuario() {
+        const nome = document.getElementById('nome').value;
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+        const perfil = document.getElementById('perfil').value;
+        const msgDiv = document.getElementById('mensagem');
+
+        if(!nome || !email || !senha || !perfil) {
+            msgDiv.innerHTML = '<span style="color: red;">Preencha todos os campos!</span>';
+            return;
+        }
+
+        msgDiv.innerHTML = '<span style="color: blue;">Criando conta...</span>';
+
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`; // Envia o crachá de Admin se tiver
+        }
+
+        fetch('http://localhost:8080/auth/register', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ 
+                name: nome, 
+                email: email, 
+                password: senha, 
+                role: perfil 
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                msgDiv.innerHTML = '<span style="color: green;">Conta criada com sucesso! Redirecionando...</span>';
+                setTimeout(() => {
+                    window.location.href = token ? 'usuarios.html' : 'login.html';
+                }, 2000);
+            } else {
+                return response.text().then(text => { throw new Error(text) });
+            }
+        })
+        .catch(error => {
+            msgDiv.innerHTML = `<span style="color: red;">Erro: ${error.message}</span>`;
+        });
+    }
+</script>
+
+</body>
+</html>
