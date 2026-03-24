@@ -50,7 +50,7 @@ public class ProfessionalService {
     private void enrichWithCoordinates(Professional obj) {
         try {
             String address = String.join(", ",
-                    obj.getStreet() != null ? obj.getAddressNumber() : "",
+                    obj.getStreet() != null ? obj.getStreet() + ", " + obj.getAddressNumber() : "",
                     obj.getCity() != null ? obj.getCity() : "",
                     obj.getState() != null ? obj.getState() : "",
                     "Brazil"
