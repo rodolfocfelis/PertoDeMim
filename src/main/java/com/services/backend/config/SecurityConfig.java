@@ -35,6 +35,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/categories").permitAll()
                         // Apenas Administradores podem gerenciar usuários
                         .requestMatchers("/users/**").hasRole("ADMIN")
+                        // Apenas Administradores podem gerenciar profissionais
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         
                         // Rotas de Busca (O seu requisito: "Usuario, que teria acesso a busca")
                         // ADMIN e PROFESSIONAL também podem buscar

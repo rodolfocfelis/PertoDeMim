@@ -8,6 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -26,6 +27,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "Invalid address data provided."));
+    }
+
+    @ExceptionHandler(NoSuchElementException.class) 
+    public ResponseEntity<Object> handleNotFound(NoSuchElementException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("error", "Registro não encontrado no banco de dados."));
     }
 
     // General fallback
