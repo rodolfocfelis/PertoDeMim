@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.http.HttpEntity;
@@ -37,7 +38,7 @@ public class ProfessionalService {
 
     public Professional findById(Long id) {
         Optional<Professional> obj = repository.findById(id);
-        return obj.orElseThrow(() -> new RuntimeException("Professional not found!"));
+        return obj.orElseThrow(() -> new NoSuchElementException("Professional not found!"));
     }
 
     public Professional insert(Professional obj) {
@@ -91,5 +92,12 @@ public class ProfessionalService {
 
     public List<Professional> findNearby(Double lat, Double lon, Double radius) {
         return repository.findNearby(lat, lon, radius);
+    }
+
+    public void delete(Long id) {
+        if (!repository.existsById(id)) {
+            throw new NoSuchElementException("Profissional não encontrado!");
+        }
+        repository.deleteById(id);
     }
 }
