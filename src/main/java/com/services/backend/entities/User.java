@@ -41,7 +41,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private UserRole role;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean active = true;
 
     public User() {}
