@@ -99,4 +99,12 @@ public class ProfessionalService {
         professional.setActive(false);
         repository.save(professional);
     }
+
+    @Transactional
+    public void softDeleteAdmin(Long id) {
+        Professional professional = repository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Profissional não encontrado."));
+        professional.setActive(false);
+        repository.save(professional);
+    }
 }
