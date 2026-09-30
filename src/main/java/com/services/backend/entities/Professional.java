@@ -55,7 +55,7 @@ public class Professional {
     @Column(nullable = false, precision = 11, scale = 8)
     private BigDecimal longitude;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean active = true;
 
     public Professional() {}
