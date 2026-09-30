@@ -1,7 +1,8 @@
 package com.services.backend.config;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.services.backend.entities.User;
@@ -10,38 +11,32 @@ import com.services.backend.repositories.UserRepository;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
-
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final String adminEmail;
+    private final String adminPassword;
 
-    public DataInitializer(UserRepository userRepository) {
+    public DataInitializer(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            @Value("${bootstrap.admin.email:}") String adminEmail,
+            @Value("${bootstrap.admin.password:}") String adminPassword) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.adminEmail = adminEmail;
+        this.adminPassword = adminPassword;
     }
 
     @Override
-    public void run(String... args) throws Exception {
-        
-        String adminEmail = "admin@pertodemim.com";
-        
+    public void run(String... args) {
+        // Bootstrap explícito por ambiente; não cria uma conta administrativa previsível.
+        if (adminEmail.isBlank() || adminPassword.isBlank()) {
+            return;
+        }
         if (userRepository.findByEmail(adminEmail) == null) {
-            
-            System.out.println("🌱 Semeando banco de dados: Criando usuário ADMIN padrão...");
-            
-            String senhaCriptografada = new BCryptPasswordEncoder().encode("admin123");
-            
-            User defaultAdmin = new User(
-                null,                  
-                "Administrador Geral",
-                adminEmail,          
-                senhaCriptografada,
-                UserRole.ADMIN 
-            );
-            
-            userRepository.save(defaultAdmin);
-            
-            System.out.println("✅ ADMIN criado com sucesso!");
-            System.out.println("📧 E-mail: " + adminEmail);
-            System.out.println("🔑 Senha: admin123");
-            System.out.println("⚠️ Lembre-se de alterar essa senha em produção!");
+            User admin = new User(null, "Administrador", adminEmail,
+                    passwordEncoder.encode(adminPassword), UserRole.ADMIN);
+            userRepository.save(admin);
         }
     }
 }

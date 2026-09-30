@@ -1,11 +1,9 @@
 package com.services.backend.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,48 +16,39 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private final SecurityFilter securityFilter;
 
-    @Autowired
-    private SecurityFilter securityFilter;
+    public SecurityConfig(SecurityFilter securityFilter) {
+        this.securityFilter = securityFilter;
+    }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity
-                .cors(Customizer.withDefaults()) // Garante que o nosso CorsConfig continua a funcionar
-                .csrf(csrf -> csrf.disable()) // Desativa proteção CSRF pois usaremos Tokens JWT
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .cors(cors -> {})
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        // Rotas Abertas (Qualquer um pode aceder para conseguir logar ou registar)
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/categories").permitAll()
-                        // Apenas Administradores podem gerenciar usuários
-                        .requestMatchers("/users/**").hasRole("ADMIN")
-                        // Apenas Administradores podem gerenciar profissionais
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        
-                        // Rotas de Busca (O seu requisito: "Usuario, que teria acesso a busca")
-                        // ADMIN e PROFESSIONAL também podem buscar
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/categories", "/categories/**").permitAll()
+                        .requestMatchers("/api/admin/**", "/admin/**", "/users/**").hasRole("ADMIN")
+                        .requestMatchers("/professionals/me", "/professionals/me/**").hasRole("PROFESSIONAL")
                         .requestMatchers(HttpMethod.GET, "/professionals/search").hasAnyRole("USER", "PROFESSIONAL", "ADMIN")
-                        
-                        // Rotas de Cadastro de Profissional e Categorias
-                        .requestMatchers(HttpMethod.POST, "/professionals").hasAnyRole("PROFESSIONAL", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/categories").hasAnyRole("PROFESSIONAL", "ADMIN")
-                        
-                        // Qualquer outra rota precisa de autenticação
-                        .anyRequest().authenticated()
-                )
+                        .requestMatchers(HttpMethod.GET, "/professionals", "/professionals/**").authenticated()
+                        .requestMatchers("/professionals/**").hasAnyRole("PROFESSIONAL", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-    // Ensina o Spring Security a fazer a verificação de login
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 
-    // Ensina o Spring a encriptar as palavras-passe no banco de dados
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
