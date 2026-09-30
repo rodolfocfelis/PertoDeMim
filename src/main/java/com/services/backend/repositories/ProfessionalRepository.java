@@ -21,11 +21,11 @@ public interface ProfessionalRepository extends JpaRepository<Professional, Long
            "WHERE p.active = true AND (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
            "cos(radians(:lat)) * cos(radians(p.latitude)) * " +
            "cos(radians(p.longitude) - radians(:lon)) + " +
-           "sin(radians(:lat)) * sin(radians(p.latitude)))))) <= :radius " +
+           "sin(radians(:lat)) * sin(radians(p.latitude))))) <= :radius " +
            "ORDER BY (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
            "cos(radians(:lat)) * cos(radians(p.latitude)) * " +
            "cos(radians(p.longitude) - radians(:lon)) + " +
-           "sin(radians(:lat)) * sin(radians(p.latitude)))))) ASC",
+           "sin(radians(:lat)) * sin(radians(p.latitude))))) ASC",
            nativeQuery = true)
     List<Professional> findNearby(@Param("lat") Double lat,
                                   @Param("lon") Double lon,
