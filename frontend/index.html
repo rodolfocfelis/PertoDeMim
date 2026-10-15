@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Busca de Profissionais</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoVzk8bR8xXzI=" crossorigin="">
     <style>
+        #mapa { height: 380px; width: 100%; margin-top: 20px; border-radius: 8px; }
+        @media (max-width: 600px) { #mapa { height: 300px; } }
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 0; margin: 0;}
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; }
@@ -62,11 +65,36 @@
 
     <button onclick="buscarProfissionais()">Localizar e Buscar</button>
 
+    <div id="mapa" role="region" aria-label="Mapa dos profissionais encontrados"></div>
     <div id="resultados">
         </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
+    const mapa = L.map("mapa").setView([-22.9, -47.06], 11);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors", maxZoom: 19
+    }).addTo(mapa);
+    const marcadores = L.featureGroup().addTo(mapa);
+    function atualizarMapa(profissionais, lat, lon) {
+        marcadores.clearLayers();
+        L.circleMarker([lat, lon], {radius: 8, color: "#007bff"})
+            .bindPopup("Sua localização aproximada").addTo(marcadores);
+        profissionais.forEach(prof => {
+            const latitude = Number(prof.latitude);
+            const longitude = Number(prof.longitude);
+            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+                    || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return;
+            const popup = document.createElement("div");
+            const titulo = document.createElement("strong");
+            titulo.textContent = prof.name || "Profissional";
+            popup.appendChild(titulo);
+            L.marker([latitude, longitude]).bindPopup(popup).addTo(marcadores);
+        });
+        mapa.fitBounds(marcadores.getBounds().pad(0.15), {maxZoom: 15});
+    }
+
    // --- LÓGICA DE NAVEGAÇÃO E SEGURANÇA ---
     const token = localStorage.getItem('token');
     const userRole = (localStorage.getItem('role') || '').toUpperCase();
@@ -140,6 +168,7 @@
         const raio = document.getElementById('raio').value;
 
         resultadosDiv.innerHTML = '<p style="text-align: center;">Buscando sua localização...</p>';
+        marcadores.clearLayers();
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -168,6 +197,7 @@
                         .then(data => {
                             resultadosDiv.innerHTML = ''; 
                             
+                            atualizarMapa(data, lat, lon);
                             if (data.length === 0) {
                                 resultadosDiv.innerHTML = '<p style="text-align: center; color: #666;">Nenhum profissional encontrado para este filtro.</p>';
                                 return;
