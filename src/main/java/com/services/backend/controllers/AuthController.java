@@ -8,6 +8,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,6 +38,16 @@ public class AuthController {
 
     @Autowired
     private UserGeocodingService geocodingService;
+
+    @GetMapping("/location")
+    public ResponseEntity<?> userLocation(@AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (user.getLatitude() == null || user.getLongitude() == null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of("error", "Endereço não cadastrado."));
+        }
+        return ResponseEntity.ok(java.util.Map.of("latitude", user.getLatitude(),
+                "longitude", user.getLongitude()));
+    }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody AuthenticationDTO data) {
