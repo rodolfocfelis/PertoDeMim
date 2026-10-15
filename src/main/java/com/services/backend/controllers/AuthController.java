@@ -18,6 +18,8 @@ import com.services.backend.entities.dtos.LoginResponseDTO;
 import com.services.backend.entities.dtos.RegisterDTO;
 import com.services.backend.repositories.UserRepository;
 import com.services.backend.services.TokenService;
+import com.services.backend.services.UserGeocodingService;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -31,6 +33,9 @@ public class AuthController {
 
     @Autowired
     private TokenService tokenService;
+
+    @Autowired
+    private UserGeocodingService geocodingService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody AuthenticationDTO data) {
@@ -64,8 +69,24 @@ public class AuthController {
             }
         }
         
+        if (data.zipCode() == null || !data.zipCode().replaceAll("\\D", "").matches("\\d{8}")
+                || data.street() == null || data.street().isBlank()
+                || data.addressNumber() == null || data.addressNumber().isBlank()
+                || data.city() == null || data.city().isBlank()
+                || data.state() == null || !data.state().matches("(?i)[A-Z]{2}")) {
+            return ResponseEntity.badRequest().body("Endereço obrigatório ou inválido.");
+        }
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
         User newUser = new User(null, data.name(), data.email(), encryptedPassword, data.role());
+        newUser.setZipCode(data.zipCode().replaceAll("\\D", ""));
+        newUser.setStreet(data.street().trim());
+        newUser.setAddressNumber(data.addressNumber().trim());
+        newUser.setComplement(data.complement());
+        newUser.setCity(data.city().trim());
+        newUser.setState(data.state().toUpperCase());
+        var coordinates = geocodingService.geocode(newUser);
+        newUser.setLatitude(coordinates.latitude());
+        newUser.setLongitude(coordinates.longitude());
         this.repository.save(newUser);
 
         return ResponseEntity.ok().build();
