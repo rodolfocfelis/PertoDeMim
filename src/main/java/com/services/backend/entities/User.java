@@ -1,5 +1,6 @@
 package com.services.backend.entities;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -43,6 +44,40 @@ public class User implements UserDetails {
 
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean active = true;
+
+    @Column(length = 10)
+    private String zipCode;
+    @Column(length = 150)
+    private String street;
+    @Column(length = 20)
+    private String addressNumber;
+    @Column(length = 100)
+    private String complement;
+    @Column(length = 100)
+    private String city;
+    @Column(length = 2)
+    private String state;
+    @Column(precision = 10, scale = 8)
+    private BigDecimal latitude;
+    @Column(precision = 11, scale = 8)
+    private BigDecimal longitude;
+
+    public String getZipCode() { return zipCode; }
+    public void setZipCode(String zipCode) { this.zipCode = zipCode; }
+    public String getStreet() { return street; }
+    public void setStreet(String street) { this.street = street; }
+    public String getAddressNumber() { return addressNumber; }
+    public void setAddressNumber(String addressNumber) { this.addressNumber = addressNumber; }
+    public String getComplement() { return complement; }
+    public void setComplement(String complement) { this.complement = complement; }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
+    public BigDecimal getLatitude() { return latitude; }
+    public void setLatitude(BigDecimal latitude) { this.latitude = latitude; }
+    public BigDecimal getLongitude() { return longitude; }
+    public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
 
     public User() {}
 
