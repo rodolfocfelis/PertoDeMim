@@ -1,95 +1,90 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema de Profissionais</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input[type="email"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        button:hover { background-color: #0056b3; }
-        #mensagem { margin-top: 15px; font-weight: bold; text-align: center; font-size: 14px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrar | PertoDeMim</title>
+<style>
+:root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #102b38; background: #edf5f3; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 22px; background: radial-gradient(circle at top left,#c6e9db,transparent 56%),#edf5f3; }
+main { width: 100%; max-width: 430px; background: #fff; padding: clamp(24px, 5vw, 40px); border-radius: 22px; box-shadow: 0 18px 50px #0c493324; }
+.logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: #087d58; }
+.logo-mark { background: #daf6e9; border-radius: 13px; padding: 10px; }
+h1 { font-size: clamp(24px, 5vw, 30px); letter-spacing: -.04em; margin: 28px 0 8px; }
+p { color: #5a7078; margin: 0 0 28px; line-height: 1.5; }
+label { font-size: 14px; font-weight: 650; display: block; margin: 18px 0 8px; }
+input { border: 1px solid #c8d8da; border-radius: 11px; padding: 13px 14px; font: inherit; width: 100%; outline-offset: 3px; }
+input:focus { outline: 2px solid #087d58; border-color: #087d58; }
+button[type=submit] { margin-top: 24px; width: 100%; background: #087d58; color: white; border: 0; border-radius: 11px; padding: 14px; font: inherit; font-weight: 700; cursor: pointer; }
+button[type=submit]:hover { background: #066e4d; }
+button[disabled] { opacity: .65; cursor: wait; }
+#mensagem { margin-top: 16px; font-size: 14px; min-height: 20px; }
+#mensagem.erro { color: #a32231; }
+#mensagem.sucesso { color: #087d58; }
+footer { border-top: 1px solid #ebf1f1; margin-top: 28px; padding-top: 20px; text-align: center; font-size: 14px; }
+a { color: #087d58; font-weight: 650; }
+</style>
 </head>
 <body>
-
-<div class="login-container">
-    <h2>Acesso ao Sistema</h2>
-    
-    <div class="form-group">
-        <label for="email">E-mail:</label>
-        <input type="email" id="email" placeholder="Digite seu e-mail" required>
-    </div>
-
-    <div class="form-group">
-        <label for="senha">Senha:</label>
-        <input type="password" id="senha" placeholder="Digite sua senha" required>
-    </div>
-
-    <button onclick="fazerLogin()">Entrar</button>
-
-    <div id="mensagem"></div>
-
-    <a href="registro.html" style="display: block; text-align: center; margin-top: 15px; font-size: 14px; color: #007bff; text-decoration: none;">
-        Não tem uma conta? Cadastre-se aqui.
-    </a>
-</div>
-
+<main>
+<div class="logo"><span class="logo-mark" aria-hidden="true">📍</span>PertoDeMim</div>
+<h1>Bem-vindo de volta</h1>
+<p>Entre na sua conta para encontrar profissionais próximos de você.</p>
+<form id="loginForm">
+<label for="email">E-mail</label>
+<input type="email" id="email" name="email" autocomplete="username" placeholder="voce@exemplo.com" required>
+<label for="senha">Senha</label>
+<input type="password" id="senha" name="senha" autocomplete="current-password" placeholder="Digite sua senha" required>
+<button type="submit" id="entrar">Entrar</button>
+<div id="mensagem" role="status" aria-live="polite"></div>
+</form>
+<footer>Ainda não tem uma conta? <a href="registro.html">Cadastre-se</a></footer>
+</main>
 <script>
-    function fazerLogin() {
-        const email = document.getElementById('email').value;
-        const senha = document.getElementById('senha').value;
-        const msgDiv = document.getElementById('mensagem');
-
-        if(!email || !senha) {
-            msgDiv.innerHTML = '<span style="color: red;">Preencha e-mail e senha!</span>';
-            return;
-        }
-
-        msgDiv.innerHTML = '<span style="color: blue;">Autenticando...</span>';
-
-        // Aqui nós faremos a requisição para a futura rota de segurança do seu Java
-        fetch('http://localhost:8080/auth/login', {
+const form = document.getElementById('loginForm');
+const mensagem = document.getElementById('mensagem');
+const botao = document.getElementById('entrar');
+function mostrarMensagem(texto, tipo = '') {
+    mensagem.textContent = texto;
+    mensagem.className = tipo;
+}
+form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    botao.disabled = true;
+    botao.textContent = 'Entrando...';
+    mostrarMensagem('Verificando suas credenciais...');
+    try {
+        const response = await fetch('http://localhost:8080/auth/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, password: senha })
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Credenciais inválidas');
-            return response.json();
-        })
-        .then(data => {
-            // O Java vai nos devolver um Token de segurança e o Perfil (Role) do usuário
-            localStorage.setItem('token', data.token); // Salva o "crachá" no navegador
-            localStorage.setItem('role', data.role);   // Salva o nível de acesso
-
-            msgDiv.innerHTML = '<span style="color: green;">Login aprovado! Redirecionando...</span>';
-
-            // A Mágica do Redirecionamento por Perfil:
-            setTimeout(() => {
-                if (data.role === 'ROLE_ADMIN') {
-                    // ADM vai para um painel geral (podemos criar depois, por enquanto vai pro index)
-                    window.location.href = 'index.html'; 
-                } else if (data.role === 'ROLE_PROFESSIONAL') {
-                    // Profissional vai direto para a tela de editar/cadastrar seus dados
-                    window.location.href = 'cadastro.html';
-                } else {
-                    // Usuário comum (ROLE_USER) vai para a tela de busca
-                    window.location.href = 'index.html';
-                }
-            }, 1000);
-        })
-        .catch(error => {
-            msgDiv.innerHTML = '<span style="color: red;">E-mail ou senha incorretos!</span>';
-            console.error('Erro no login:', error);
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('senha').value
+            })
         });
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                throw new Error('E-mail ou senha incorretos.');
+            }
+            throw new Error('Não foi possível realizar o login. Tente novamente.');
+        }
+        const data = await response.json();
+        if (!data.token || !data.role) throw new Error('Resposta de autenticação inválida.');
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        mostrarMensagem('Login realizado com sucesso!', 'sucesso');
+        window.location.href = data.role === 'ROLE_PROFESSIONAL' ? 'cadastro.html' : 'index.html';
+    } catch (error) {
+        mostrarMensagem(error instanceof TypeError
+            ? 'Não foi possível conectar ao servidor. Verifique sua conexão.'
+            : error.message, 'erro');
+    } finally {
+        botao.disabled = false;
+        botao.textContent = 'Entrar';
     }
+});
 </script>
-
 </body>
 </html>
