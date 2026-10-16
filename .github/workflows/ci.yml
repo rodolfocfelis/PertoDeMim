@@ -1,0 +1,52 @@
+name: Validate backend and frontend
+on:
+  pull_request:
+  push:
+    branches:
+      - 'feat/**'
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: search_professionals
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d search_professionals"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/search_professionals
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: temporary-ci-secret-at-least-thirty-two-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: bash ./mvnw -B verify
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build React if present
+        shell: bash
+        run: |
+          if [ -f frontend-react/package.json ]; then
+            cd frontend-react
+            npm install --no-audit --no-fund
+            npm run build
+          else
+            echo "React frontend not yet present on this branch"
+          fi
