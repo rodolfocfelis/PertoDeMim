@@ -33,6 +33,9 @@ public class ReviewController {
     public ResponseEntity<?> create(@PathVariable Long professionalId, @RequestBody ReviewInput input,
                                     @AuthenticationPrincipal User user) {
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (user.getRole() == com.services.backend.entities.enums.UserRole.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Administradores não podem avaliar profissionais."));
+        }
         if (input.rating() == null || input.rating() < 1 || input.rating() > 5
                 || (input.comment() != null && input.comment().length() > 2000)) {
             return ResponseEntity.badRequest().body(Map.of("error", "A nota deve ser de 1 a 5 e o comentário ter até 2000 caracteres."));
@@ -53,8 +56,7 @@ public class ReviewController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ReviewView(saved.getId(), user.getId(), saved.getRating(), saved.getComment()));
         } catch (org.springframework.dao.DataIntegrityViolationException ex) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Você já avaliou este profissional."));
+            throw ex;
         }
     }
 
