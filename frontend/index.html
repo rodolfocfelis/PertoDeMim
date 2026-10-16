@@ -141,9 +141,7 @@
 
         resultadosDiv.innerHTML = '<p style="text-align: center;">Buscando sua localização...</p>';
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
+        const processarPosicao = (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
                     const categoriaId = document.getElementById('categoriaBusca').value;
@@ -215,13 +213,28 @@
                             resultadosDiv.innerHTML = `<p style="color: red; text-align: center;">${error.message}</p>`;
                             console.error('Erro:', error);
                         });
-                },
-                (error) => {
-                    resultadosDiv.innerHTML = '<p style="color: red; text-align: center;">Não foi possível obter sua localização. Ative o GPS/Permissões do navegador.</p>';
+                };
+        const usarEnderecoSalvo = async () => {
+            try {
+                const response = await fetch('http://localhost:8080/auth/location', {
+                    headers: {'Authorization': `Bearer ${token}`}
+                });
+                if (!response.ok) throw new Error('Endereço salvo indisponível.');
+                const coordinates = await response.json();
+                if (!Number.isFinite(Number(coordinates.latitude)) || !Number.isFinite(Number(coordinates.longitude))) {
+                    throw new Error('Coordenadas salvas inválidas.');
                 }
-            );
+                resultadosDiv.textContent = 'Utilizando o endereço cadastrado para a busca.';
+                processarPosicao({coords:{latitude:Number(coordinates.latitude),longitude:Number(coordinates.longitude)}});
+            } catch (error) {
+                resultadosDiv.textContent = 'Não foi possível usar GPS ou endereço salvo. Confira seu cadastro.';
+            }
+        };
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(processarPosicao, usarEnderecoSalvo,
+                {timeout: 10000, maximumAge: 60000});
         } else {
-            resultadosDiv.innerHTML = '<p style="color: red; text-align: center;">Seu navegador não suporta geolocalização.</p>';
+            usarEnderecoSalvo();
         }
     }
 </script>
