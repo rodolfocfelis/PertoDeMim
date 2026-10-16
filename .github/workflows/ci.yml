@@ -32,7 +32,7 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - run: ./mvnw -B verify
+      - run: bash ./mvnw -B verify
   frontend:
     runs-on: ubuntu-latest
     steps:
