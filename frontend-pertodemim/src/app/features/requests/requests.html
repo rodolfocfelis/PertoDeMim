@@ -1,0 +1,146 @@
+<section class="page-container wide-page">
+  <header class="section-header">
+    <span class="eyebrow">Atendimentos</span>
+    <h1>{{ auth.hasRole('PROFESSIONAL') ? 'Solicitações recebidas' : 'Minhas solicitações' }}</h1>
+    <p>Acompanhe os pedidos e mantenha o histórico de cada atendimento.</p>
+  </header>
+  <form class="filters" (ngSubmit)="load()">
+    <div class="field">
+      <label for="request-status">Status</label
+      ><select id="request-status" name="status" [(ngModel)]="status">
+        <option value="">Todos</option>
+        @for (option of statuses; track option[0]) {
+          <option [value]="option[0]">{{ option[1] }}</option>
+        }
+      </select>
+    </div>
+    <button class="btn-secondary" [disabled]="loading()">Atualizar lista</button>
+  </form>
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="feedback success" role="status">{{ success() }}</p>
+  }
+  @if (loading()) {
+    <p class="state-box">Carregando solicitações...</p>
+  } @else {
+    <div class="market-grid">
+      @for (item of items(); track item.id) {
+        <article class="market-card">
+          <div class="card-heading">
+            <h2>{{ item.serviceName }}</h2>
+            <span
+              class="badge"
+              [class.inactive]="item.status === 'CANCELLED' || item.status === 'DECLINED'"
+              >{{ labels[item.status] }}</span
+            >
+          </div>
+          <p class="hint">
+            Pedido #{{ item.id }} · {{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+          @if (auth.hasRole('PROFESSIONAL')) {
+            <p><strong>Cliente</strong> {{ item.customerName }}</p>
+          }
+          <p class="service-description">{{ item.description }}</p>
+          @if (item.preferredDate) {
+            <p class="hint">Data desejada {{ item.preferredDate | date: 'dd/MM/yyyy' }}</p>
+          }
+          <div class="actions">
+            @if (auth.hasRole('PROFESSIONAL')) {
+              @if (item.status === 'REQUESTED') {
+                <button class="btn-primary" (click)="ask(item, 'ACCEPTED')">
+                  Aceitar solicitação</button
+                ><button class="btn-danger" (click)="ask(item, 'DECLINED')">Recusar</button>
+              }
+              @if (item.status === 'ACCEPTED') {
+                <button class="btn-primary" (click)="ask(item, 'AWAITING_CONFIRMATION')">
+                  Informar conclusão
+                </button>
+              }
+              @if (item.customerPhone) {
+                <a
+                  class="btn-secondary"
+                  [href]="whatsapp(item.customerPhone)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Contatar cliente</a
+                >
+              }
+            } @else {
+              @if (item.status === 'REQUESTED' || item.status === 'ACCEPTED') {
+                <button class="btn-danger" (click)="ask(item, 'CANCELLED')">
+                  Cancelar solicitação
+                </button>
+              }
+              @if (item.status === 'AWAITING_CONFIRMATION') {
+                <button class="btn-primary" (click)="ask(item, 'COMPLETED')">
+                  Confirmar atendimento concluído
+                </button>
+              }
+              @if (item.status === 'COMPLETED' && item.reviewRating === null) {
+                <button class="btn-primary" (click)="reviewing.set(item)">
+                  Avaliar atendimento
+                </button>
+              }
+              @if (item.professionalPhone) {
+                <a
+                  class="btn-secondary"
+                  [href]="whatsapp(item.professionalPhone)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Contatar profissional</a
+                >
+              }
+            }
+          </div>
+          @if (item.reviewRating !== null) {
+            <p class="hint">Avaliação registrada · {{ item.reviewRating }} / 5</p>
+          }
+        </article>
+      } @empty {
+        <div class="state-box">
+          Nenhuma solicitação encontrada.
+          {{
+            auth.hasRole('USER')
+              ? 'Encontre um profissional na busca e envie seu primeiro pedido.'
+              : 'Os novos pedidos aparecerão aqui.'
+          }}
+        </div>
+      }
+    </div>
+    @if (pages() > 0) {
+      <nav class="pagination" aria-label="Páginas de solicitações">
+        <button class="btn-secondary" [disabled]="page() === 0" (click)="load(page() - 1)">
+          Anterior</button
+        ><span>Página {{ pages() ? page() + 1 : 0 }} de {{ pages() }}</span
+        ><button
+          class="btn-secondary"
+          [disabled]="page() + 1 >= pages()"
+          (click)="load(page() + 1)"
+        >
+          Próxima
+        </button>
+      </nav>
+    }
+  }
+  @if (selected(); as action) {
+    <app-confirm-dialog
+      title="Atualizar solicitação"
+      [message]="
+        'Confirma alterar o pedido #' + action.request.id + ' para ' + labels[action.status] + '?'
+      "
+      [busy]="busy()"
+      (cancel)="selected.set(null)"
+      (confirm)="change()"
+    />
+  }
+  @if (reviewing(); as request) {
+    <app-review-dialog
+      [requestId]="request.id"
+      [name]="request.serviceName"
+      (cancel)="reviewing.set(null)"
+      (done)="reviewed()"
+    />
+  }
+</section>

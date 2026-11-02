@@ -28,9 +28,12 @@ public class UserController {
 
     // Exclui um usuário pelo ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, org.springframework.security.core.Authentication authentication) {
         if (repository.existsById(id)) {
-            repository.deleteById(id);
+            User user = repository.findById(id).orElseThrow();
+            if(user.getEmail().equals(authentication.getName())) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT);
+            user.setActive(false);
+            repository.save(user);
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

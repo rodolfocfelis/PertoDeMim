@@ -1,0 +1,56 @@
+<section class="page-container profile-page">
+  <header class="section-header">
+    <span class="eyebrow">Minha conta</span>
+    <h1>{{ adminId ? 'Gerenciar cadastro' : 'Meu perfil' }}</h1>
+    <p>Mantenha contato e endereço atualizados para encontrar serviços próximos.</p>
+  </header>
+  @if (loading()) {
+    <p class="state-box">Carregando perfil...</p>
+  }
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="feedback success" role="status">{{ success() }}</p>
+  }
+  @if (account(); as user) {
+    <div class="profile-summary">
+      <div class="avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+      <div>
+        <h2>{{ user.name }}</h2>
+        <p>{{ user.email }}</p>
+        <span class="role-pill">{{ user.role }}</span>
+      </div>
+    </div>
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="account-name">Nome</label
+          ><input id="account-name" formControlName="name" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="account-email">E-mail</label
+          ><input id="account-email" type="email" formControlName="email" autocomplete="email" />
+        </div>
+        <div class="full-width">
+          <h2>Contato e endereço</h2>
+          <app-address-fields [group]="form" prefix="profile-" />
+        </div>
+        @if (account()?.role === 'PROFESSIONAL') {
+          <div class="field full-width">
+            <label for="account-bio">Sobre seu trabalho (opcional)</label
+            ><textarea id="account-bio" formControlName="bio" maxlength="2000" rows="4"></textarea>
+          </div>
+        }
+        <div class="full-width">
+          <button class="btn-primary" [disabled]="saving()">
+            {{ saving() ? 'Salvando...' : 'Salvar alterações' }}
+          </button>
+        </div>
+      </div>
+    </form>
+    @if (account()?.role === 'PROFESSIONAL') {
+      <p class="hint">Telefone, endereço e profissão podem ser editados em Meus serviços.</p>
+    }
+  }
+</section>

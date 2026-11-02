@@ -1,0 +1,110 @@
+<div class="login-page">
+  <div class="login-panel">
+    <section class="brand-panel">
+      <span class="brand-badge">PertoDeMim</span>
+      <h2>Crie sua conta e descubra serviços ao seu alcance.</h2>
+      <p>Conecte-se com pessoas e profissionais da sua região de forma simples, rápida e segura.</p>
+
+      <ul class="benefits-list">
+        <li>✅ Acesso rápido</li>
+        <li>✅ Perfil personalizado</li>
+        <li>✅ Mais confiança na contratação</li>
+      </ul>
+    </section>
+
+    <section class="form-panel">
+      <div class="auth-header">
+        <span class="eyebrow">Cadastre-se</span>
+        <h1>Criar conta</h1>
+      </div>
+
+      @if (errorMessage) {
+        <p class="feedback error" role="alert">{{ errorMessage }}</p>
+      }
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-group">
+          <label for="name">Nome completo</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="Como quer ser chamado?"
+            [class.invalid]="hasFieldError('name', 'required')"
+          />
+          @if (hasFieldError('name', 'required')) {
+            <small class="error-text"> O nome é obrigatório. </small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="seu@email.com"
+            [class.invalid]="hasFieldError('email', 'required') || hasFieldError('email', 'email')"
+          />
+          @if (hasFieldError('email', 'required')) {
+            <small class="error-text"> O e-mail é obrigatório. </small>
+          }
+          @if (hasFieldError('email', 'email')) {
+            <small class="error-text"> Informe um e-mail válido. </small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="De 8 a 72 caracteres"
+            [class.invalid]="
+              hasFieldError('password', 'required') || hasFieldError('password', 'minlength')
+            "
+          />
+          @if (hasFieldError('password', 'required')) {
+            <small class="error-text"> A senha é obrigatória. </small>
+          }
+          @if (hasFieldError('password', 'minlength')) {
+            <small class="error-text"> A senha deve ter pelo menos 8 caracteres. </small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="role">Tipo de perfil</label>
+          <select id="role" formControlName="role">
+            <option value="USER">Cliente (Procuro Serviços)</option>
+            <option value="PROFESSIONAL">Profissional (Presto Serviços)</option>
+            @if (isAdmin()) {
+              <option value="ADMIN">Administrador</option>
+            }
+          </select>
+        </div>
+
+        <div class="full-width">
+          <h2>Contato e endereço</h2>
+          <app-address-fields [group]="registerForm" prefix="register-" />
+        </div>
+        <div class="form-group">
+          <label for="confirm-password">Confirmar senha</label
+          ><input
+            id="confirm-password"
+            type="password"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+          />
+        </div>
+        <button type="submit" class="btn-primary" [disabled]="isLoading">
+          {{ isLoading ? 'Criando conta...' : 'Criar conta' }}
+        </button>
+
+        <div class="auth-footer">
+          <span>Já tem conta?</span>
+          <a routerLink="/login">Fazer login</a>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>

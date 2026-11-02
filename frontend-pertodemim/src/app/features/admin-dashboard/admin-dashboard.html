@@ -1,0 +1,96 @@
+<section class="page-container wide-page">
+  <header class="section-header header-actions">
+    <div>
+      <span class="eyebrow">Visão do marketplace</span>
+      <h1>Painel gerencial</h1>
+      <p>Acompanhe a oferta, a demanda e as avaliações da comunidade.</p>
+    </div>
+    <button class="btn-secondary" [disabled]="loading()" (click)="load()">
+      Atualizar indicadores
+    </button>
+  </header>
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  <div class="metrics-grid">
+    @for (card of cards; track card[0]) {
+      <article class="metric-card">
+        <span>{{ card[1] }}</span
+        ><strong>{{ metrics()[card[0]] ?? '—' }}</strong>
+      </article>
+    }
+  </div>
+  <div class="actions">
+    <a class="btn-secondary" routerLink="/admin/users">Gerenciar usuários</a
+    ><a class="btn-secondary" routerLink="/admin/categories">Gerenciar categorias</a>
+  </div>
+  <h2 class="section-title">Moderação de avaliações</h2>
+  <p class="hint">
+    Ocultar retira a avaliação da página do serviço e da média pública, preservando o histórico do
+    atendimento.
+  </p>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Serviço e cliente</th>
+          <th>Avaliação</th>
+          <th>Visibilidade</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (review of reviews(); track review.id) {
+          <tr>
+            <td>
+              {{ review.serviceName }}<br /><small class="hint"
+                >{{ review.customerName }} · {{ review.createdAt | date: 'dd/MM/yyyy' }}</small
+              >
+            </td>
+            <td>
+              <strong>{{ review.rating }} / 5</strong>
+              <p>{{ review.comment }}</p>
+            </td>
+            <td>{{ review.visible ? 'Pública' : 'Oculta' }}</td>
+            <td>
+              <button class="btn-secondary" (click)="selected.set(review)">
+                {{ review.visible ? 'Ocultar' : 'Restaurar' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4">Ainda não há avaliações para moderar.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (pages() > 0) {
+    <nav class="pagination" aria-label="Páginas de avaliações">
+      <button class="btn-secondary" [disabled]="page() === 0" (click)="loadReviews(page() - 1)">
+        Anterior</button
+      ><span>Página {{ pages() ? page() + 1 : 0 }} de {{ pages() }}</span
+      ><button
+        class="btn-secondary"
+        [disabled]="page() + 1 >= pages()"
+        (click)="loadReviews(page() + 1)"
+      >
+        Próxima
+      </button>
+    </nav>
+  }
+  @if (selected(); as review) {
+    <app-confirm-dialog
+      title="Moderar avaliação"
+      [message]="
+        review.visible
+          ? 'Deseja ocultar esta avaliação da página pública?'
+          : 'Deseja tornar esta avaliação pública novamente?'
+      "
+      [busy]="busy()"
+      (cancel)="selected.set(null)"
+      (confirm)="moderate()"
+    />
+  }
+</section>

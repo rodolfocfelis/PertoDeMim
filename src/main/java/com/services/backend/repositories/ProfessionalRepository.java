@@ -13,12 +13,14 @@ import com.services.backend.entities.Professional;
 @Repository
 public interface ProfessionalRepository extends JpaRepository<Professional, Long> {
     List<Professional> findByActiveTrue();
+    long countByActiveTrue();
+    List<Professional> findByUserEmail(String userEmail);
     List<Professional> findByCategoryIdAndActiveTrue(Long categoryId);
     List<Professional> findByUserEmailAndActiveTrue(String userEmail);
     Optional<Professional> findByIdAndUserEmail(Long id, String userEmail);
 
     @Query(value = "SELECT * FROM professional p " +
-           "WHERE p.active = true AND (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
+           "WHERE p.active = true AND EXISTS (SELECT 1 FROM tb_users u WHERE u.email=p.user_email AND u.active=true) AND (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
            "cos(radians(:lat)) * cos(radians(p.latitude)) * " +
            "cos(radians(p.longitude) - radians(:lon)) + " +
            "sin(radians(:lat)) * sin(radians(p.latitude)))))) <= :radius " +

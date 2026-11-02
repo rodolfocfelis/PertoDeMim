@@ -88,4 +88,17 @@ public class Professional {
     public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    @Column(length = 2000)
+    private String description;
+    @Column(precision = 12, scale = 2)
+    private BigDecimal startingPrice;
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean acceptingRequests = true;
+    public String getDescription() { return description; }
+    public void setDescription(String value) { description = value; }
+    public BigDecimal getStartingPrice() { return startingPrice; }
+    public void setStartingPrice(BigDecimal value) { startingPrice = value; }
+    public boolean isAcceptingRequests() { return acceptingRequests; }
+    public void setAcceptingRequests(boolean value) { acceptingRequests = value; }
 }

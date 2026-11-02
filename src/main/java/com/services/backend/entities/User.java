@@ -91,4 +91,49 @@ public class User implements UserDetails {
         User other = (User) obj;
         return Objects.equals(id, other.id);
     }
+
+    private String phone;
+    public String getPhone() { return phone; }
+    public void setPhone(String value) { this.phone = value; }
+
+    private String zipCode;
+    public String getZipCode() { return zipCode; }
+    public void setZipCode(String value) { this.zipCode = value; }
+
+    private String street;
+    public String getStreet() { return street; }
+    public void setStreet(String value) { this.street = value; }
+
+    private String addressNumber;
+    public String getAddressNumber() { return addressNumber; }
+    public void setAddressNumber(String value) { this.addressNumber = value; }
+
+    private String complement;
+    public String getComplement() { return complement; }
+    public void setComplement(String value) { this.complement = value; }
+
+    private String neighborhood;
+    public String getNeighborhood() { return neighborhood; }
+    public void setNeighborhood(String value) { this.neighborhood = value; }
+
+    private String city;
+    public String getCity() { return city; }
+    public void setCity(String value) { this.city = value; }
+
+    private String state;
+    public String getState() { return state; }
+    public void setState(String value) { this.state = value; }
+
+    @Column(length = 2000)
+    private String bio;
+    public String getBio() { return bio; }
+    public void setBio(String value) { this.bio = value; }
+
+    private Double latitude;
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double value) { this.latitude = value; }
+
+    private Double longitude;
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double value) { this.longitude = value; }
 }

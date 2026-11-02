@@ -1,0 +1,35 @@
+{
+  "/api/auth/**": {
+    "target": "http://127.0.0.1:8080",
+    "pathRewrite": {
+      "^/api": ""
+    }
+  },
+  "/api/categories": {
+    "target": "http://127.0.0.1:8080",
+    "pathRewrite": {
+      "^/api": ""
+    }
+  },
+  "/api/professionals/**": {
+    "target": "http://127.0.0.1:8080",
+    "pathRewrite": {
+      "^/api": ""
+    }
+  },
+  "/api/professionals": {
+    "target": "http://127.0.0.1:8080",
+    "pathRewrite": {
+      "^/api": ""
+    }
+  },
+  "/api/admin/**": {
+    "target": "http://127.0.0.1:8080"
+  },
+  "/api/me": {
+    "target": "http://127.0.0.1:8080"
+  },
+  "/api/market/**": {
+    "target": "http://127.0.0.1:8080"
+  }
+}

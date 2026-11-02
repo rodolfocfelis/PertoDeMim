@@ -28,11 +28,15 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(errors -> errors
+                        .authenticationEntryPoint((request, response, exception) -> response.setStatus(401))
+                        .accessDeniedHandler((request, response, exception) -> response.setStatus(403)))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/**").permitAll()
                         .requestMatchers("/api/admin/**", "/admin/**", "/users/**").hasRole("ADMIN")
                         .requestMatchers("/professionals/me", "/professionals/me/**").hasRole("PROFESSIONAL")
+                        .requestMatchers("/professionals/mine").hasRole("PROFESSIONAL")
                         .requestMatchers(HttpMethod.GET, "/professionals/search").hasAnyRole("USER", "PROFESSIONAL", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/professionals", "/professionals/**").authenticated()
                         .requestMatchers("/professionals/**").hasAnyRole("PROFESSIONAL", "ADMIN")

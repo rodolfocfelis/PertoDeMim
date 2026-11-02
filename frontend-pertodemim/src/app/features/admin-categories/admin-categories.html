@@ -1,0 +1,78 @@
+<section class="page-container wide-page">
+  <header class="section-header">
+    <span class="eyebrow">Administração</span>
+    <h1>Categorias de serviços</h1>
+    <p>Organize as profissões disponíveis para cadastro e busca.</p>
+  </header>
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="feedback success" role="status">{{ success() }}</p>
+  }
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid inset-panel" novalidate>
+    <div class="field">
+      <label for="category-name">Nome</label><input id="category-name" formControlName="name" />
+    </div>
+    <div class="field">
+      <label for="category-description">Descrição</label
+      ><input id="category-description" formControlName="description" />
+    </div>
+    <div class="actions full-width">
+      <button class="btn-primary" [disabled]="saving()">
+        {{ editing() === null ? 'Cadastrar categoria' : 'Salvar categoria' }}
+      </button>
+      @if (editing() !== null) {
+        <button type="button" class="btn-secondary" (click)="reset()">Cancelar edição</button>
+      }
+    </div>
+  </form>
+  @if (loading()) {
+    <p class="state-box">Carregando categorias...</p>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (category of categories(); track category.id) {
+            <tr>
+              <td>{{ category.name }}</td>
+              <td>{{ category.description }}</td>
+              <td class="actions">
+                <button class="btn-secondary" (click)="edit(category)">Editar</button
+                ><button class="btn-danger" (click)="deleting.set(category)">Excluir</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3">Nenhuma categoria cadastrada.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <nav class="pagination" aria-label="Páginas de categorias">
+      <button class="btn-secondary" [disabled]="page() === 0" (click)="load(page() - 1)">
+        Anterior</button
+      ><span>Página {{ pages() ? page() + 1 : 0 }} de {{ pages() }}</span
+      ><button class="btn-secondary" [disabled]="page() + 1 >= pages()" (click)="load(page() + 1)">
+        Próxima
+      </button>
+    </nav>
+  }
+  @if (deleting(); as category) {
+    <app-confirm-dialog
+      title="Excluir categoria"
+      [message]="'Confirma excluir ' + category.name + '? Categorias em uso serão preservadas.'"
+      [busy]="saving()"
+      (cancel)="deleting.set(null)"
+      (confirm)="remove()"
+    />
+  }
+</section>
