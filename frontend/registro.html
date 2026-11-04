@@ -46,6 +46,13 @@
         </select>
     </div>
 
+    <h3>Seu endereço</h3>
+    <div class="form-group"><label for="cep">CEP:</label><input type="text" id="cep" placeholder="00000-000" maxlength="9" required></div>
+    <div class="form-group"><label for="rua">Rua:</label><input type="text" id="rua" required></div>
+    <div class="form-group"><label for="numero">Número:</label><input type="text" id="numero" required></div>
+    <div class="form-group"><label for="complemento">Complemento (opcional):</label><input type="text" id="complemento"></div>
+    <div class="form-group"><label for="cidade">Cidade:</label><input type="text" id="cidade" required></div>
+    <div class="form-group"><label for="estado">UF:</label><input type="text" id="estado" maxlength="2" required></div>
     <button onclick="registrarUsuario()">Cadastrar</button>
 
     <div id="mensagem"></div>
@@ -79,9 +86,15 @@
         const email = document.getElementById('email').value;
         const senha = document.getElementById('senha').value;
         const perfil = document.getElementById('perfil').value;
+        const zipCode = document.getElementById('cep').value.replace(/\D/g, '');
+        const street = document.getElementById('rua').value.trim();
+        const addressNumber = document.getElementById('numero').value.trim();
+        const complement = document.getElementById('complemento').value.trim();
+        const city = document.getElementById('cidade').value.trim();
+        const state = document.getElementById('estado').value.trim().toUpperCase();
         const msgDiv = document.getElementById('mensagem');
 
-        if(!nome || !email || !senha || !perfil) {
+        if(!nome || !email || !senha || !perfil || zipCode.length !== 8 || !street || !addressNumber || !city || !/^[A-Z]{2}$/.test(state)) {
             msgDiv.innerHTML = '<span style="color: red;">Preencha todos os campos!</span>';
             return;
         }
@@ -101,7 +114,7 @@
                 name: nome, 
                 email: email, 
                 password: senha, 
-                role: perfil 
+                role: perfil, zipCode, street, addressNumber, complement, city, state
             })
         })
         .then(response => {
