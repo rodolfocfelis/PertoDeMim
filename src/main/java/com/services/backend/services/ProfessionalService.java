@@ -1,5 +1,6 @@
 package com.services.backend.services;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -77,7 +78,7 @@ public class ProfessionalService {
                 obj.setLongitude(new BigDecimal(first.get("lon").asText()));
             }
         } catch (Exception e) {
-            throw new ResourceAccessException("Falha no serviço de geocodificação.", e);
+            throw new ResourceAccessException("Falha no serviço de geocodificação.", new IOException(e));
         }
     }
 
