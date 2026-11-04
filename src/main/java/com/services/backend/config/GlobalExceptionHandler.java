@@ -12,6 +12,31 @@ import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler({org.springframework.http.converter.HttpMessageNotReadableException.class,
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+            org.springframework.web.bind.MissingServletRequestParameterException.class})
+    public ResponseEntity<Map<String,String>> handleMalformedInput(Exception ex) {
+        return ResponseEntity.badRequest().body(Map.of("error","Dados ou parâmetros inválidos."));
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<Map<String, String>> handleAuthentication(Exception ex) {
+        return ResponseEntity.status(401).body(Map.of("error", "Credenciais inválidas."));
+    }
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleStatus(org.springframework.web.server.ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(Map.of("error", "Operação indisponível para estes dados."));
+    }
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleConflict(Exception ex) {
+        return ResponseEntity.status(409).body(Map.of("error", "Registro em uso ou dados já cadastrados."));
+    }
+
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Parâmetros inválidos para esta operação."));
+    }
 
     // ViaCEP or Nominatim unavailable (timeout, connection refused)
     @ExceptionHandler(ResourceAccessException.class)

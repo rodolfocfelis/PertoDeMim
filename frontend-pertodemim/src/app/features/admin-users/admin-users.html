@@ -1,0 +1,105 @@
+<section class="page-container wide-page">
+  <header class="section-header header-actions">
+    <div>
+      <span class="eyebrow">Administração</span>
+      <h1>Usuários</h1>
+      <p>Gerencie clientes, profissionais e seus acessos.</p>
+    </div>
+    <a class="btn-secondary" routerLink="/register">Cadastrar usuário</a>
+  </header>
+  <form class="filters" (ngSubmit)="load()">
+    <div class="field">
+      <label for="user-name">Nome ou e-mail</label
+      ><input id="user-name" name="name" [(ngModel)]="name" />
+    </div>
+    <div class="field">
+      <label for="user-role">Perfil</label
+      ><select id="user-role" name="role" [(ngModel)]="role">
+        <option value="">Todos</option>
+        <option value="USER">Cliente</option>
+        <option value="PROFESSIONAL">Profissional</option>
+        <option value="ADMIN">Administrador</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="user-status">Status</label
+      ><select id="user-status" name="status" [(ngModel)]="status">
+        <option value="">Todos</option>
+        <option value="true">Ativos</option>
+        <option value="false">Inativos</option>
+      </select>
+    </div>
+    <button class="btn-secondary" [disabled]="loading()">Filtrar</button>
+  </form>
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="feedback success" role="status">{{ success() }}</p>
+  }
+  @if (loading()) {
+    <p class="state-box">Carregando usuários...</p>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Perfil</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr>
+              <td>
+                {{ user.name
+                }}<small class="hint" style="display: block"
+                  >{{ user.phone || 'Telefone não informado' }} ·
+                  {{ user.city || 'Endereço pendente' }}</small
+                >
+              </td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.role }}</td>
+              <td>
+                <span class="badge" [class.inactive]="!user.active">{{
+                  user.active ? 'Ativo' : 'Inativo'
+                }}</span>
+              </td>
+              <td>
+                <button class="btn-secondary" (click)="selected.set(user)">
+                  {{ user.active ? 'Desativar' : 'Ativar' }}</button
+                ><a class="btn-secondary" [routerLink]="'/admin/users/' + user.id"
+                  >Editar cadastro</a
+                >
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">Nenhum usuário encontrado.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <nav class="pagination" aria-label="Páginas de usuários">
+      <button class="btn-secondary" [disabled]="page() === 0" (click)="load(page() - 1)">
+        Anterior</button
+      ><span>{{ total() }} usuários · Página {{ pages() ? page() + 1 : 0 }} de {{ pages() }}</span
+      ><button class="btn-secondary" [disabled]="page() + 1 >= pages()" (click)="load(page() + 1)">
+        Próxima
+      </button>
+    </nav>
+  }
+  @if (selected(); as user) {
+    <app-confirm-dialog
+      [title]="user.active ? 'Desativar usuário' : 'Ativar usuário'"
+      [message]="'Confirma alterar o acesso de ' + user.name + '?'"
+      [busy]="busy()"
+      (cancel)="selected.set(null)"
+      (confirm)="changeStatus()"
+    />
+  }
+</section>

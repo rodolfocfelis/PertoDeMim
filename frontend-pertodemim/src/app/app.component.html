@@ -1,0 +1,29 @@
+<div class="app-shell">
+  @if (auth.isLoggedIn()) {
+    <header class="topbar">
+      <a class="brand" [routerLink]="auth.home()"
+        >PertoDeMim<span>Serviços e conexões locais</span></a
+      >
+      <nav class="main-nav" aria-label="Navegação principal">
+        <a [routerLink]="scope() + '/search'" routerLinkActive="active">Buscar profissionais</a>
+        @if (auth.hasRole('PROFESSIONAL')) {
+          <a routerLink="/app/professional/requests" routerLinkActive="active">Solicitações</a>
+          <a routerLink="/app/professional/services" routerLinkActive="active">Meus serviços</a>
+        }
+        @if (auth.hasRole('ADMIN')) {
+          <a routerLink="/admin/dashboard" routerLinkActive="active">Painel</a>
+          <a routerLink="/admin/users" routerLinkActive="active">Usuários</a>
+          <a routerLink="/admin/categories" routerLinkActive="active">Categorias</a>
+        }
+        @if (auth.hasRole('USER')) {
+          <a routerLink="/app/user/favorites" routerLinkActive="active">Favoritos</a>
+          <a routerLink="/app/user/requests" routerLinkActive="active">Minhas solicitações</a>
+        }
+        <a [routerLink]="scope() + '/profile'" routerLinkActive="active">Meu perfil</a>
+        <button type="button" class="logout-link" (click)="auth.logout()">Sair</button>
+      </nav>
+    </header>
+  }
+  <main class="content-area"><router-outlet /></main>
+  <footer class="site-footer">PertoDeMim · Profissionais mais perto de você</footer>
+</div>

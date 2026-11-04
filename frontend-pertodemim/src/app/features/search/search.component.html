@@ -1,0 +1,118 @@
+<section class="page-container wide-page">
+  <header class="section-header">
+    <span class="eyebrow">Serviços próximos</span>
+    <h1>Encontrar profissionais</h1>
+    <p>Encontre o serviço ideal por proximidade, disponibilidade e avaliações.</p>
+  </header>
+  <form (ngSubmit)="search()" class="form-grid" novalidate>
+    <div class="field">
+      <label for="category">O que você precisa?</label
+      ><select id="category" name="category" [(ngModel)]="categoryId">
+        <option value="">Todas as profissões</option>
+        @for (category of categories(); track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="radius">Raio de busca (km)</label
+      ><input
+        id="radius"
+        name="radius"
+        type="number"
+        min="0.1"
+        max="500"
+        step="0.1"
+        [(ngModel)]="radius"
+      />
+    </div>
+    <div class="full-width">
+      <button class="btn-primary" [disabled]="loading()">
+        {{ loading() ? 'Buscando...' : 'Localizar e buscar' }}
+      </button>
+    </div>
+  </form>
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="feedback success" role="status">{{ success() }}</p>
+  }
+  @if (notice()) {
+    <p class="hint" role="status">{{ notice() }}</p>
+  }
+  @if (error().includes('Complete seu endereço')) {
+    <a class="btn-secondary" [routerLink]="profileLink">Completar meu endereço</a>
+  }
+  @if (searched()) {
+    <div class="inset-panel search-refinements">
+      <h2>Refinar resultados</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="service-query">Nome ou descrição</label
+          ><input id="service-query" [(ngModel)]="query" />
+        </div>
+        <div class="field">
+          <label for="service-max-price">Preço inicial até R$</label
+          ><input
+            id="service-max-price"
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="maxPrice"
+            placeholder="Qualquer preço"
+          />
+        </div>
+        <div class="field">
+          <label for="service-rating">Avaliação mínima</label
+          ><select id="service-rating" [(ngModel)]="minRating">
+            <option [ngValue]="0">Todas, incluindo sem avaliação</option>
+            <option [ngValue]="3">3 estrelas</option>
+            <option [ngValue]="4">4 estrelas</option>
+            <option [ngValue]="5">5 estrelas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="service-sort">Ordenar por</label
+          ><select id="service-sort" [(ngModel)]="sort">
+            <option value="distance">Menor distância</option>
+            <option value="rating">Melhor avaliação</option>
+            <option value="price">Menor preço inicial</option>
+          </select>
+        </div>
+        <label class="check-label full-width"
+          ><input type="checkbox" [(ngModel)]="onlyAvailable" /> Somente recebendo novas
+          solicitações</label
+        >
+      </div>
+    </div>
+    <p class="results-count" aria-live="polite">
+      {{ visible().length }} profissional(is) encontrado(s)
+    </p>
+    <div class="market-grid">
+      @for (service of visible(); track service.id) {
+        <app-service-card
+          [service]="service"
+          [summary]="summaries()[service.id]"
+          [favorite]="favoriteIds().has(service.id)"
+          [busy]="favoriteBusy() !== null"
+          (toggle)="toggleFavorite(service)"
+          (request)="requesting.set(service)"
+          (reviews)="reviewing.set(service)"
+        />
+      } @empty {
+        <div class="state-box">Nenhum profissional encontrado para este filtro.</div>
+      }
+    </div>
+  }
+  @if (requesting(); as service) {
+    <app-request-dialog [service]="service" (cancel)="requesting.set(null)" (done)="requested()" />
+  }
+  @if (reviewing(); as service) {
+    <app-reviews-dialog
+      [serviceId]="service.id"
+      [name]="service.name"
+      (cancel)="reviewing.set(null)"
+    />
+  }
+</section>

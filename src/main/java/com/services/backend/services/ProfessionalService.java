@@ -29,7 +29,10 @@ public class ProfessionalService {
 
     public ProfessionalService(ProfessionalRepository repository) {
         this.repository = repository;
-        this.restTemplate = new RestTemplate();
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(7000);
+        this.restTemplate = new RestTemplate(factory);
     }
 
     public List<Professional> findAll() {
@@ -53,6 +56,14 @@ public class ProfessionalService {
     }
 
     public Professional insert(Professional obj) {
+        if (obj.getDescription() != null && obj.getDescription().length() > 2000) {
+            throw new IllegalArgumentException("Descrição limitada a 2000 caracteres.");
+        }
+        if (obj.getStartingPrice() != null && (obj.getStartingPrice().signum() < 0
+                || obj.getStartingPrice().compareTo(new BigDecimal("9999999999.99")) > 0
+                || obj.getStartingPrice().scale() > 2)) {
+            throw new IllegalArgumentException("Preço inicial inválido.");
+        }
         enrichWithCoordinates(obj);
         return repository.save(obj);
     }
@@ -71,13 +82,18 @@ public class ProfessionalService {
             ResponseEntity<String> response = restTemplate.exchange(
                     URI.create(url), HttpMethod.GET, new HttpEntity<>(headers), String.class);
             JsonNode root = new ObjectMapper().readTree(response.getBody());
+            if (!root.isArray() || root.isEmpty()) {
+                throw new IllegalArgumentException("Endereço não encontrado.");
+            }
             if (root.isArray() && !root.isEmpty()) {
                 JsonNode first = root.get(0);
                 obj.setLatitude(new BigDecimal(first.get("lat").asText()));
                 obj.setLongitude(new BigDecimal(first.get("lon").asText()));
             }
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
-            throw new ResourceAccessException("Falha no serviço de geocodificação.", e);
+            throw new ResourceAccessException("Falha no serviço de geocodificação.", new java.io.IOException(e));
         }
     }
 
@@ -86,8 +102,9 @@ public class ProfessionalService {
     }
 
     public List<Professional> findNearby(Double lat, Double lon, Double radius) {
-        if (lat == null || lat < -90 || lat > 90 || lon == null || lon < -180 || lon > 180
-                || radius == null || radius <= 0 || radius > 500) {
+        if (lat == null || !Double.isFinite(lat) || lat < -90 || lat > 90
+                || lon == null || !Double.isFinite(lon) || lon < -180 || lon > 180
+                || radius == null || !Double.isFinite(radius) || radius <= 0 || radius > 500) {
             throw new IllegalArgumentException("Coordenadas ou raio inválidos.");
         }
         return repository.findNearby(lat, lon, radius);

@@ -1,0 +1,70 @@
+<div class="login-page">
+  <div class="login-panel">
+    <section class="brand-panel">
+      <span class="brand-badge">PertoDeMim</span>
+      <h2>Encontre profissionais confiáveis perto de você.</h2>
+      <p>
+        Conecte-se com especialistas locais em poucos segundos e agende serviços com mais rapidez,
+        segurança e qualidade.
+      </p>
+
+      <ul class="benefits-list">
+        <li>Profissionais da sua região</li>
+        <li>Contato direto pelo WhatsApp</li>
+        <li>Busca por profissão e distância</li>
+      </ul>
+    </section>
+
+    <section class="form-panel">
+      <div class="auth-header">
+        <span class="eyebrow">Bem-vindo</span>
+        <h1>Entrar na conta</h1>
+      </div>
+
+      @if (errorMessage) {
+        <p class="feedback error" role="alert">{{ errorMessage }}</p>
+      }
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="exemplo@email.com"
+            [class.invalid]="hasFieldError('email', 'required') || hasFieldError('email', 'email')"
+          />
+          @if (hasFieldError('email', 'required')) {
+            <small class="error-text"> O e-mail é obrigatório. </small>
+          }
+          @if (hasFieldError('email', 'email')) {
+            <small class="error-text"> Informe um e-mail válido. </small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="Digite a sua senha"
+            [class.invalid]="hasFieldError('password', 'required')"
+          />
+          @if (hasFieldError('password', 'required')) {
+            <small class="error-text"> A senha é obrigatória. </small>
+          }
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="isLoading">
+          {{ isLoading ? 'Entrando...' : 'Entrar' }}
+        </button>
+
+        <div class="auth-footer">
+          <span>Ainda não tem conta?</span>
+          <a routerLink="/register">Crie uma conta aqui</a>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>

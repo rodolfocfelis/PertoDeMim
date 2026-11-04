@@ -31,7 +31,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             var email = tokenService.validateToken(token);
             UserDetails user = userRepository.findByEmail(email);
 
-            if (user != null) {
+            if (user != null && user.isEnabled()) {
                 // Se o token for válido, dizemos ao Spring para autenticar esta requisição
                 var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);

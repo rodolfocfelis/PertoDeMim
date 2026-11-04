@@ -1,0 +1,146 @@
+<section class="page-container wide-page">
+  <header class="section-header">
+    <span class="eyebrow">Área do profissional</span>
+    <h1>Meus serviços</h1>
+    <p>Cadastre seus serviços e mantenha seus contatos e endereços atualizados.</p>
+  </header>
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="feedback success" role="status">{{ success() }}</p>
+  }
+  <form [formGroup]="form" (ngSubmit)="submitForm()" class="inset-panel" novalidate>
+    <h2>{{ editing() === null ? 'Cadastrar serviço' : 'Editar serviço' }}</h2>
+    <div class="form-grid">
+      <div class="field full-width">
+        <label for="service-description">Descrição do serviço (opcional)</label
+        ><textarea
+          id="service-description"
+          formControlName="description"
+          rows="4"
+          maxlength="2000"
+          placeholder="Descreva sua experiência, o que está incluído e os serviços oferecidos"
+        ></textarea>
+      </div>
+      <div class="field">
+        <label for="service-price">Preço inicial em R$ (opcional)</label
+        ><input
+          id="service-price"
+          type="number"
+          min="0"
+          step="0.01"
+          formControlName="startingPrice"
+        /><small class="hint">Deixe em branco para combinar o valor com o cliente.</small>
+      </div>
+      <div class="field">
+        <label for="service-available">Receber novas solicitações</label
+        ><select id="service-available" formControlName="acceptingRequests">
+          <option [ngValue]="true">Disponível</option>
+          <option [ngValue]="false">Agenda indisponível</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="service-name">Nome do profissional / empresa</label
+        ><input id="service-name" formControlName="name" />
+      </div>
+      <div class="field">
+        <label for="service-phone">Telefone (WhatsApp)</label
+        ><input id="service-phone" formControlName="phone" placeholder="DDD e número" />
+      </div>
+      <div class="field full-width">
+        <label for="service-category">Categoria</label
+        ><select id="service-category" formControlName="categoryId">
+          <option value="">Selecione uma categoria</option>
+          @for (category of categories(); track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select>
+        @if (!categories().length) {
+          <small class="hint">Solicite ao administrador o cadastro da profissão desejada.</small>
+        }
+      </div>
+      <div class="field">
+        <label for="service-cep">CEP (opcional)</label
+        ><input id="service-cep" formControlName="cep" (blur)="buscarCep()" />
+        @if (searchingCep()) {
+          <small role="status">Consultando CEP...</small>
+        }
+      </div>
+      <div class="field">
+        <label for="service-state">Estado (UF)</label
+        ><input id="service-state" formControlName="state" maxlength="2" />
+      </div>
+      <div class="field">
+        <label for="service-street">Rua</label
+        ><input id="service-street" formControlName="street" />
+      </div>
+      <div class="field">
+        <label for="service-number">Número</label
+        ><input id="service-number" formControlName="addressNumber" />
+      </div>
+      <div class="field">
+        <label for="service-city">Cidade</label><input id="service-city" formControlName="city" />
+      </div>
+      <div class="field">
+        <label for="service-complement">Complemento (opcional)</label
+        ><input id="service-complement" formControlName="complement" />
+      </div>
+      <div class="actions full-width">
+        <button class="btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Validando endereço e salvando...' : 'Salvar serviço' }}
+        </button>
+        @if (editing() !== null) {
+          <button class="btn-secondary" type="button" (click)="reset()">Cancelar edição</button>
+        }
+      </div>
+    </div>
+  </form>
+  @if (loading()) {
+    <p class="state-box">Carregando seus serviços...</p>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Serviço</th>
+            <th>Categoria</th>
+            <th>Local</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (service of services(); track service.id) {
+            <tr>
+              <td>{{ service.name }}</td>
+              <td>{{ service.category?.name }}</td>
+              <td>{{ service.city }} · {{ service.state }}</td>
+              <td class="actions">
+                <button class="btn-secondary" (click)="edit(service)">Editar</button
+                ><button class="btn-danger" (click)="deleting.set(service)">Desativar</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4">Você ainda não cadastrou serviços.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  @if (deleting(); as service) {
+    <app-confirm-dialog
+      title="Desativar serviço"
+      [message]="
+        'Deseja desativar ' +
+        service.name +
+        '? Ele deixará de aparecer na busca e o histórico será preservado.'
+      "
+      [busy]="saving()"
+      (cancel)="deleting.set(null)"
+      (confirm)="remove()"
+    />
+  }
+</section>

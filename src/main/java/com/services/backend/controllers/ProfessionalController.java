@@ -44,6 +44,7 @@ public class ProfessionalController {
 
     @PostMapping
     public ResponseEntity<Professional> createProfessional(@RequestBody Professional professional, Authentication authentication) {
+        professional.setId(null);
         professional.setUserEmail(authentication.getName());
         professional.setActive(true);
         return ResponseEntity.status(HttpStatus.CREATED).body(service.insert(professional));
@@ -70,6 +71,9 @@ public class ProfessionalController {
         Professional professional = service.findOwnedById(id, authentication.getName());
         professional.setName(updatedData.getName() != null ? updatedData.getName() : professional.getName());
         professional.setPhone(updatedData.getPhone());
+        professional.setDescription(updatedData.getDescription());
+        professional.setStartingPrice(updatedData.getStartingPrice());
+        professional.setAcceptingRequests(updatedData.isAcceptingRequests());
         professional.setCity(updatedData.getCity());
         professional.setState(updatedData.getState());
         professional.setStreet(updatedData.getStreet());
@@ -86,6 +90,11 @@ public class ProfessionalController {
     public ResponseEntity<Void> softDelete(@PathVariable Long id, Authentication authentication) {
         service.softDelete(id, authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/mine")
+    public List<Professional> getMyServices(Authentication authentication) {
+        return service.findOwned(authentication.getName());
     }
 
     @GetMapping("/me")
