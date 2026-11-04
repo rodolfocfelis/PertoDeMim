@@ -1,6 +1,8 @@
 package com.services.backend.controllers;
 
 import java.util.NoSuchElementException;
+import java.util.Map;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,10 +23,12 @@ import com.services.backend.repositories.UserRepository;
 public class AdminController {
     private final UserRepository users;
     private final CategoryRepository categories;
+    private final PasswordEncoder passwordEncoder;
 
-    public AdminController(UserRepository users, CategoryRepository categories) {
+    public AdminController(UserRepository users, CategoryRepository categories, PasswordEncoder passwordEncoder) {
         this.users = users;
         this.categories = categories;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/users")
@@ -47,6 +51,61 @@ public class AdminController {
         User user = users.findById(id).orElseThrow(() -> new NoSuchElementException("Usuário não encontrado."));
         user.setActive(active);
         return ResponseEntity.ok(users.save(user));
+    }
+
+
+    public record UserInput(String name, String email, String password, UserRole role, Boolean active) {}
+
+    @GetMapping("/users/{id}")
+    public User getUser(@PathVariable Long id) {
+        return users.findById(id).orElseThrow(() -> new NoSuchElementException("Usuário não encontrado."));
+    }
+
+    @PostMapping("/users")
+    @Transactional
+    public ResponseEntity<?> createUser(@RequestBody UserInput input) {
+        if (input.name() == null || input.name().isBlank() || input.email() == null
+                || input.email().isBlank() || input.password() == null || input.password().isBlank()
+                || input.role() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Nome, e-mail, senha e perfil são obrigatórios."));
+        }
+        if (users.findByEmail(input.email().trim()) != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "E-mail já cadastrado."));
+        }
+        User user = new User(null, input.name().trim(), input.email().trim(),
+                passwordEncoder.encode(input.password()), input.role());
+        if (input.active() != null) user.setActive(input.active());
+        return ResponseEntity.status(HttpStatus.CREATED).body(users.save(user));
+    }
+
+    @PutMapping("/users/{id}")
+    @Transactional
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserInput input) {
+        User user = users.findById(id).orElseThrow(() -> new NoSuchElementException("Usuário não encontrado."));
+        if (input.name() == null || input.name().isBlank() || input.email() == null
+                || input.email().isBlank() || input.role() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Nome, e-mail e perfil são obrigatórios."));
+        }
+        var existing = users.findByEmail(input.email().trim());
+        if (existing instanceof User other && !other.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "E-mail já cadastrado."));
+        }
+        user.setName(input.name().trim());
+        user.setEmail(input.email().trim());
+        user.setRole(input.role());
+        if (input.password() != null && !input.password().isBlank()) {
+            user.setPassword(passwordEncoder.encode(input.password()));
+        }
+        if (input.active() != null) user.setActive(input.active());
+        return ResponseEntity.ok(users.save(user));
+    }
+
+    @DeleteMapping("/users/{id}")
+    @Transactional
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        User user = users.findById(id).orElseThrow(() -> new NoSuchElementException("Usuário não encontrado."));
+        users.delete(user);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/categories")
