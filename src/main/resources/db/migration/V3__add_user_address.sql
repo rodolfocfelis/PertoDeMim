@@ -1,0 +1,8 @@
+ALTER TABLE tb_users ADD COLUMN zip_code VARCHAR(10);
+ALTER TABLE tb_users ADD COLUMN street VARCHAR(150);
+ALTER TABLE tb_users ADD COLUMN address_number VARCHAR(20);
+ALTER TABLE tb_users ADD COLUMN complement VARCHAR(100);
+ALTER TABLE tb_users ADD COLUMN city VARCHAR(100);
+ALTER TABLE tb_users ADD COLUMN state VARCHAR(2);
+ALTER TABLE tb_users ADD COLUMN latitude NUMERIC(10, 8);
+ALTER TABLE tb_users ADD COLUMN longitude NUMERIC(11, 8);
